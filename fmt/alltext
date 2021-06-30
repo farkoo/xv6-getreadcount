@@ -1,0 +1,9300 @@
+0100 typedef unsigned int   uint;
+0101 typedef unsigned short ushort;
+0102 typedef unsigned char  uchar;
+0103 typedef uint pde_t;
+0104 
+0105 
+0106 
+0107 
+0108 
+0109 
+0110 
+0111 
+0112 
+0113 
+0114 
+0115 
+0116 
+0117 
+0118 
+0119 
+0120 
+0121 
+0122 
+0123 
+0124 
+0125 
+0126 
+0127 
+0128 
+0129 
+0130 
+0131 
+0132 
+0133 
+0134 
+0135 
+0136 
+0137 
+0138 
+0139 
+0140 
+0141 
+0142 
+0143 
+0144 
+0145 
+0146 
+0147 
+0148 
+0149 
+0150 #define NPROC        64  
+0151 #define KSTACKSIZE 4096  
+0152 #define NCPU          8  
+0153 #define NOFILE       16  
+0154 #define NFILE       100  
+0155 #define NINODE       50  
+0156 #define NDEV         10  
+0157 #define ROOTDEV       1  
+0158 #define MAXARG       32  
+0159 #define MAXOPBLOCKS  10  
+0160 #define LOGSIZE      (MAXOPBLOCKS*3)  
+0161 #define NBUF         (MAXOPBLOCKS*3)  
+0162 #define FSSIZE       1000  
+0163 
+0164 
+0165 
+0166 
+0167 
+0168 
+0169 
+0170 
+0171 
+0172 
+0173 
+0174 
+0175 
+0176 
+0177 
+0178 
+0179 
+0180 
+0181 
+0182 
+0183 
+0184 
+0185 
+0186 
+0187 
+0188 
+0189 
+0190 
+0191 
+0192 
+0193 
+0194 
+0195 
+0196 
+0197 
+0198 
+0199 
+0200 
+0201 
+0202 #define EXTMEM  0x100000            
+0203 #define PHYSTOP 0xE000000           
+0204 #define DEVSPACE 0xFE000000         
+0205 
+0206 
+0207 #define KERNBASE 0x80000000         
+0208 #define KERNLINK (KERNBASE+EXTMEM)  
+0209 
+0210 #define V2P(a) (((uint) (a)) - KERNBASE)
+0211 #define P2V(a) ((void *)(((char *) (a)) + KERNBASE))
+0212 
+0213 #define V2P_WO(x) ((x) - KERNBASE)    
+0214 #define P2V_WO(x) ((x) + KERNBASE)    
+0215 
+0216 
+0217 
+0218 
+0219 
+0220 
+0221 
+0222 
+0223 
+0224 
+0225 
+0226 
+0227 
+0228 
+0229 
+0230 
+0231 
+0232 
+0233 
+0234 
+0235 
+0236 
+0237 
+0238 
+0239 
+0240 
+0241 
+0242 
+0243 
+0244 
+0245 
+0246 
+0247 
+0248 
+0249 
+0250 struct buf;
+0251 struct context;
+0252 struct file;
+0253 struct inode;
+0254 struct pipe;
+0255 struct proc;
+0256 struct rtcdate;
+0257 struct spinlock;
+0258 struct sleeplock;
+0259 struct stat;
+0260 struct superblock;
+0261 
+0262 
+0263 void            binit(void);
+0264 struct buf*     bread(uint, uint);
+0265 void            brelse(struct buf*);
+0266 void            bwrite(struct buf*);
+0267 
+0268 
+0269 void            consoleinit(void);
+0270 void            cprintf(char*, ...);
+0271 void            consoleintr(int(*)(void));
+0272 void            panic(char*) __attribute__((noreturn));
+0273 
+0274 
+0275 int             exec(char*, char**);
+0276 
+0277 
+0278 struct file*    filealloc(void);
+0279 void            fileclose(struct file*);
+0280 struct file*    filedup(struct file*);
+0281 void            fileinit(void);
+0282 int             fileread(struct file*, char*, int n);
+0283 int             filestat(struct file*, struct stat*);
+0284 int             filewrite(struct file*, char*, int n);
+0285 
+0286 
+0287 void            readsb(int dev, struct superblock *sb);
+0288 int             dirlink(struct inode*, char*, uint);
+0289 struct inode*   dirlookup(struct inode*, char*, uint*);
+0290 struct inode*   ialloc(uint, short);
+0291 struct inode*   idup(struct inode*);
+0292 void            iinit(int dev);
+0293 void            ilock(struct inode*);
+0294 void            iput(struct inode*);
+0295 void            iunlock(struct inode*);
+0296 void            iunlockput(struct inode*);
+0297 void            iupdate(struct inode*);
+0298 int             namecmp(const char*, const char*);
+0299 struct inode*   namei(char*);
+0300 struct inode*   nameiparent(char*, char*);
+0301 int             readi(struct inode*, char*, uint, uint);
+0302 void            stati(struct inode*, struct stat*);
+0303 int             writei(struct inode*, char*, uint, uint);
+0304 
+0305 
+0306 void            ideinit(void);
+0307 void            ideintr(void);
+0308 void            iderw(struct buf*);
+0309 
+0310 
+0311 void            ioapicenable(int irq, int cpu);
+0312 extern uchar    ioapicid;
+0313 void            ioapicinit(void);
+0314 
+0315 
+0316 char*           kalloc(void);
+0317 void            kfree(char*);
+0318 void            kinit1(void*, void*);
+0319 void            kinit2(void*, void*);
+0320 
+0321 
+0322 void            kbdintr(void);
+0323 
+0324 
+0325 void            cmostime(struct rtcdate *r);
+0326 int             lapicid(void);
+0327 extern volatile uint*    lapic;
+0328 void            lapiceoi(void);
+0329 void            lapicinit(void);
+0330 void            lapicstartap(uchar, uint);
+0331 void            microdelay(int);
+0332 
+0333 
+0334 void            initlog(int dev);
+0335 void            log_write(struct buf*);
+0336 void            begin_op();
+0337 void            end_op();
+0338 
+0339 
+0340 extern int      ismp;
+0341 void            mpinit(void);
+0342 
+0343 
+0344 void            picenable(int);
+0345 void            picinit(void);
+0346 
+0347 
+0348 
+0349 
+0350 
+0351 int             pipealloc(struct file**, struct file**);
+0352 void            pipeclose(struct pipe*, int);
+0353 int             piperead(struct pipe*, char*, int);
+0354 int             pipewrite(struct pipe*, char*, int);
+0355 
+0356 
+0357 
+0358 int             cpuid(void);
+0359 void            exit(void);
+0360 int             fork(void);
+0361 int             growproc(int);
+0362 int             kill(int);
+0363 struct cpu*     mycpu(void);
+0364 struct proc*    myproc();
+0365 void            pinit(void);
+0366 void            procdump(void);
+0367 void            scheduler(void) __attribute__((noreturn));
+0368 void            sched(void);
+0369 void            setproc(struct proc*);
+0370 void            sleep(void*, struct spinlock*);
+0371 void            userinit(void);
+0372 int             wait(void);
+0373 void            wakeup(void*);
+0374 void            yield(void);
+0375 
+0376 
+0377 void            swtch(struct context**, struct context*);
+0378 
+0379 
+0380 void            acquire(struct spinlock*);
+0381 void            getcallerpcs(void*, uint*);
+0382 int             holding(struct spinlock*);
+0383 void            initlock(struct spinlock*, char*);
+0384 void            release(struct spinlock*);
+0385 void            pushcli(void);
+0386 void            popcli(void);
+0387 
+0388 
+0389 void            acquiresleep(struct sleeplock*);
+0390 void            releasesleep(struct sleeplock*);
+0391 int             holdingsleep(struct sleeplock*);
+0392 void            initsleeplock(struct sleeplock*, char*);
+0393 
+0394 
+0395 int             memcmp(const void*, const void*, uint);
+0396 void*           memmove(void*, const void*, uint);
+0397 void*           memset(void*, int, uint);
+0398 char*           safestrcpy(char*, const char*, int);
+0399 int             strlen(const char*);
+0400 int             strncmp(const char*, const char*, uint);
+0401 char*           strncpy(char*, const char*, int);
+0402 
+0403 
+0404 int             argint(int, int*);
+0405 int             argptr(int, char**, int);
+0406 int             argstr(int, char**);
+0407 int             fetchint(uint, int*);
+0408 int             fetchstr(uint, char**);
+0409 void            syscall(void);
+0410 
+0411 
+0412 void            timerinit(void);
+0413 
+0414 
+0415 void            idtinit(void);
+0416 extern uint     ticks;
+0417 void            tvinit(void);
+0418 extern struct spinlock tickslock;
+0419 
+0420 
+0421 void            uartinit(void);
+0422 void            uartintr(void);
+0423 void            uartputc(int);
+0424 
+0425 
+0426 void            seginit(void);
+0427 void            kvmalloc(void);
+0428 pde_t*          setupkvm(void);
+0429 char*           uva2ka(pde_t*, char*);
+0430 int             allocuvm(pde_t*, uint, uint);
+0431 int             deallocuvm(pde_t*, uint, uint);
+0432 void            freevm(pde_t*);
+0433 void            inituvm(pde_t*, char*, uint);
+0434 int             loaduvm(pde_t*, char*, struct inode*, uint, uint);
+0435 pde_t*          copyuvm(pde_t*, uint);
+0436 void            switchuvm(struct proc*);
+0437 void            switchkvm(void);
+0438 int             copyout(pde_t*, uint, void*, uint);
+0439 void            clearpteu(pde_t *pgdir, char *uva);
+0440 
+0441 
+0442 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+0443 
+0444 
+0445 
+0446 
+0447 
+0448 
+0449 
+0450 
+0451 
+0452 static inline uchar
+0453 inb(ushort port)
+0454 {
+0455   uchar data;
+0456 
+0457   asm volatile("in %1,%0" : "=a" (data) : "d" (port));
+0458   return data;
+0459 }
+0460 
+0461 static inline void
+0462 insl(int port, void *addr, int cnt)
+0463 {
+0464   asm volatile("cld; rep insl" :
+0465                "=D" (addr), "=c" (cnt) :
+0466                "d" (port), "0" (addr), "1" (cnt) :
+0467                "memory", "cc");
+0468 }
+0469 
+0470 static inline void
+0471 outb(ushort port, uchar data)
+0472 {
+0473   asm volatile("out %0,%1" : : "a" (data), "d" (port));
+0474 }
+0475 
+0476 static inline void
+0477 outw(ushort port, ushort data)
+0478 {
+0479   asm volatile("out %0,%1" : : "a" (data), "d" (port));
+0480 }
+0481 
+0482 static inline void
+0483 outsl(int port, const void *addr, int cnt)
+0484 {
+0485   asm volatile("cld; rep outsl" :
+0486                "=S" (addr), "=c" (cnt) :
+0487                "d" (port), "0" (addr), "1" (cnt) :
+0488                "cc");
+0489 }
+0490 
+0491 static inline void
+0492 stosb(void *addr, int data, int cnt)
+0493 {
+0494   asm volatile("cld; rep stosb" :
+0495                "=D" (addr), "=c" (cnt) :
+0496                "0" (addr), "1" (cnt), "a" (data) :
+0497                "memory", "cc");
+0498 }
+0499 
+0500 static inline void
+0501 stosl(void *addr, int data, int cnt)
+0502 {
+0503   asm volatile("cld; rep stosl" :
+0504                "=D" (addr), "=c" (cnt) :
+0505                "0" (addr), "1" (cnt), "a" (data) :
+0506                "memory", "cc");
+0507 }
+0508 
+0509 struct segdesc;
+0510 
+0511 static inline void
+0512 lgdt(struct segdesc *p, int size)
+0513 {
+0514   volatile ushort pd[3];
+0515 
+0516   pd[0] = size-1;
+0517   pd[1] = (uint)p;
+0518   pd[2] = (uint)p >> 16;
+0519 
+0520   asm volatile("lgdt (%0)" : : "r" (pd));
+0521 }
+0522 
+0523 struct gatedesc;
+0524 
+0525 static inline void
+0526 lidt(struct gatedesc *p, int size)
+0527 {
+0528   volatile ushort pd[3];
+0529 
+0530   pd[0] = size-1;
+0531   pd[1] = (uint)p;
+0532   pd[2] = (uint)p >> 16;
+0533 
+0534   asm volatile("lidt (%0)" : : "r" (pd));
+0535 }
+0536 
+0537 static inline void
+0538 ltr(ushort sel)
+0539 {
+0540   asm volatile("ltr %0" : : "r" (sel));
+0541 }
+0542 
+0543 static inline uint
+0544 readeflags(void)
+0545 {
+0546   uint eflags;
+0547   asm volatile("pushfl; popl %0" : "=r" (eflags));
+0548   return eflags;
+0549 }
+0550 static inline void
+0551 loadgs(ushort v)
+0552 {
+0553   asm volatile("movw %0, %%gs" : : "r" (v));
+0554 }
+0555 
+0556 static inline void
+0557 cli(void)
+0558 {
+0559   asm volatile("cli");
+0560 }
+0561 
+0562 static inline void
+0563 sti(void)
+0564 {
+0565   asm volatile("sti");
+0566 }
+0567 
+0568 static inline uint
+0569 xchg(volatile uint *addr, uint newval)
+0570 {
+0571   uint result;
+0572 
+0573   
+0574   asm volatile("lock; xchgl %0, %1" :
+0575                "+m" (*addr), "=a" (result) :
+0576                "1" (newval) :
+0577                "cc");
+0578   return result;
+0579 }
+0580 
+0581 static inline uint
+0582 rcr2(void)
+0583 {
+0584   uint val;
+0585   asm volatile("movl %%cr2,%0" : "=r" (val));
+0586   return val;
+0587 }
+0588 
+0589 static inline void
+0590 lcr3(uint val)
+0591 {
+0592   asm volatile("movl %0,%%cr3" : : "r" (val));
+0593 }
+0594 
+0595 
+0596 
+0597 
+0598 
+0599 
+0600 
+0601 
+0602 struct trapframe {
+0603   
+0604   uint edi;
+0605   uint esi;
+0606   uint ebp;
+0607   uint oesp;      
+0608   uint ebx;
+0609   uint edx;
+0610   uint ecx;
+0611   uint eax;
+0612 
+0613   
+0614   ushort gs;
+0615   ushort padding1;
+0616   ushort fs;
+0617   ushort padding2;
+0618   ushort es;
+0619   ushort padding3;
+0620   ushort ds;
+0621   ushort padding4;
+0622   uint trapno;
+0623 
+0624   
+0625   uint err;
+0626   uint eip;
+0627   ushort cs;
+0628   ushort padding5;
+0629   uint eflags;
+0630 
+0631   
+0632   uint esp;
+0633   ushort ss;
+0634   ushort padding6;
+0635 };
+0636 
+0637 
+0638 
+0639 
+0640 
+0641 
+0642 
+0643 
+0644 
+0645 
+0646 
+0647 
+0648 
+0649 
+0650 
+0651 
+0652 
+0653 
+0654 #define SEG_NULLASM                                             \
+0655         .word 0, 0;                                             \
+0656         .byte 0, 0, 0, 0
+0657 
+0658 
+0659 
+0660 #define SEG_ASM(type,base,lim)                                  \
+0661         .word (((lim) >> 12) & 0xffff), ((base) & 0xffff);      \
+0662         .byte (((base) >> 16) & 0xff), (0x90 | (type)),         \
+0663                 (0xC0 | (((lim) >> 28) & 0xf)), (((base) >> 24) & 0xff)
+0664 
+0665 #define STA_X     0x8       
+0666 #define STA_W     0x2       
+0667 #define STA_R     0x2       
+0668 
+0669 
+0670 
+0671 
+0672 
+0673 
+0674 
+0675 
+0676 
+0677 
+0678 
+0679 
+0680 
+0681 
+0682 
+0683 
+0684 
+0685 
+0686 
+0687 
+0688 
+0689 
+0690 
+0691 
+0692 
+0693 
+0694 
+0695 
+0696 
+0697 
+0698 
+0699 
+0700 
+0701 
+0702 
+0703 
+0704 #define FL_IF           0x00000200      
+0705 
+0706 
+0707 #define CR0_PE          0x00000001      
+0708 #define CR0_WP          0x00010000      
+0709 #define CR0_PG          0x80000000      
+0710 
+0711 #define CR4_PSE         0x00000010      
+0712 
+0713 
+0714 #define SEG_KCODE 1  
+0715 #define SEG_KDATA 2  
+0716 #define SEG_UCODE 3  
+0717 #define SEG_UDATA 4  
+0718 #define SEG_TSS   5  
+0719 
+0720 
+0721 #define NSEGS     6
+0722 
+0723 #ifndef __ASSEMBLER__
+0724 
+0725 struct segdesc {
+0726   uint lim_15_0 : 16;  
+0727   uint base_15_0 : 16; 
+0728   uint base_23_16 : 8; 
+0729   uint type : 4;       
+0730   uint s : 1;          
+0731   uint dpl : 2;        
+0732   uint p : 1;          
+0733   uint lim_19_16 : 4;  
+0734   uint avl : 1;        
+0735   uint rsv1 : 1;       
+0736   uint db : 1;         
+0737   uint g : 1;          
+0738   uint base_31_24 : 8; 
+0739 };
+0740 
+0741 
+0742 
+0743 
+0744 
+0745 
+0746 
+0747 
+0748 
+0749 
+0750 
+0751 #define SEG(type, base, lim, dpl) (struct segdesc)    \
+0752 { ((lim) >> 12) & 0xffff, (uint)(base) & 0xffff,      \
+0753   ((uint)(base) >> 16) & 0xff, type, 1, dpl, 1,       \
+0754   (uint)(lim) >> 28, 0, 0, 1, 1, (uint)(base) >> 24 }
+0755 #define SEG16(type, base, lim, dpl) (struct segdesc)  \
+0756 { (lim) & 0xffff, (uint)(base) & 0xffff,              \
+0757   ((uint)(base) >> 16) & 0xff, type, 1, dpl, 1,       \
+0758   (uint)(lim) >> 16, 0, 0, 1, 0, (uint)(base) >> 24 }
+0759 #endif
+0760 
+0761 #define DPL_USER    0x3     
+0762 
+0763 
+0764 #define STA_X       0x8     
+0765 #define STA_W       0x2     
+0766 #define STA_R       0x2     
+0767 
+0768 
+0769 #define STS_T32A    0x9     
+0770 #define STS_IG32    0xE     
+0771 #define STS_TG32    0xF     
+0772 
+0773 
+0774 
+0775 
+0776 
+0777 
+0778 
+0779 
+0780 
+0781 
+0782 #define PDX(va)         (((uint)(va) >> PDXSHIFT) & 0x3FF)
+0783 
+0784 
+0785 #define PTX(va)         (((uint)(va) >> PTXSHIFT) & 0x3FF)
+0786 
+0787 
+0788 #define PGADDR(d, t, o) ((uint)((d) << PDXSHIFT | (t) << PTXSHIFT | (o)))
+0789 
+0790 
+0791 #define NPDENTRIES      1024    
+0792 #define NPTENTRIES      1024    
+0793 #define PGSIZE          4096    
+0794 
+0795 #define PTXSHIFT        12      
+0796 #define PDXSHIFT        22      
+0797 
+0798 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
+0799 #define PGROUNDDOWN(a) (((a)) & ~(PGSIZE-1))
+0800 
+0801 #define PTE_P           0x001   
+0802 #define PTE_W           0x002   
+0803 #define PTE_U           0x004   
+0804 #define PTE_PS          0x080   
+0805 
+0806 
+0807 #define PTE_ADDR(pte)   ((uint)(pte) & ~0xFFF)
+0808 #define PTE_FLAGS(pte)  ((uint)(pte) &  0xFFF)
+0809 
+0810 #ifndef __ASSEMBLER__
+0811 typedef uint pte_t;
+0812 
+0813 
+0814 struct taskstate {
+0815   uint link;         
+0816   uint esp0;         
+0817   ushort ss0;        
+0818   ushort padding1;
+0819   uint *esp1;
+0820   ushort ss1;
+0821   ushort padding2;
+0822   uint *esp2;
+0823   ushort ss2;
+0824   ushort padding3;
+0825   void *cr3;         
+0826   uint *eip;         
+0827   uint eflags;
+0828   uint eax;          
+0829   uint ecx;
+0830   uint edx;
+0831   uint ebx;
+0832   uint *esp;
+0833   uint *ebp;
+0834   uint esi;
+0835   uint edi;
+0836   ushort es;         
+0837   ushort padding4;
+0838   ushort cs;
+0839   ushort padding5;
+0840   ushort ss;
+0841   ushort padding6;
+0842   ushort ds;
+0843   ushort padding7;
+0844   ushort fs;
+0845   ushort padding8;
+0846   ushort gs;
+0847   ushort padding9;
+0848   ushort ldt;
+0849   ushort padding10;
+0850   ushort t;          
+0851   ushort iomb;       
+0852 };
+0853 
+0854 
+0855 struct gatedesc {
+0856   uint off_15_0 : 16;   
+0857   uint cs : 16;         
+0858   uint args : 5;        
+0859   uint rsv1 : 3;        
+0860   uint type : 4;        
+0861   uint s : 1;           
+0862   uint dpl : 2;         
+0863   uint p : 1;           
+0864   uint off_31_16 : 16;  
+0865 };
+0866 
+0867 
+0868 
+0869 
+0870 
+0871 
+0872 
+0873 
+0874 
+0875 #define SETGATE(gate, istrap, sel, off, d)                \
+0876 {                                                         \
+0877   (gate).off_15_0 = (uint)(off) & 0xffff;                \
+0878   (gate).cs = (sel);                                      \
+0879   (gate).args = 0;                                        \
+0880   (gate).rsv1 = 0;                                        \
+0881   (gate).type = (istrap) ? STS_TG32 : STS_IG32;           \
+0882   (gate).s = 0;                                           \
+0883   (gate).dpl = (d);                                       \
+0884   (gate).p = 1;                                           \
+0885   (gate).off_31_16 = (uint)(off) >> 16;                  \
+0886 }
+0887 
+0888 #endif
+0889 
+0890 
+0891 
+0892 
+0893 
+0894 
+0895 
+0896 
+0897 
+0898 
+0899 
+0900 
+0901 
+0902 #define ELF_MAGIC 0x464C457FU  
+0903 
+0904 
+0905 struct elfhdr {
+0906   uint magic;  
+0907   uchar elf[12];
+0908   ushort type;
+0909   ushort machine;
+0910   uint version;
+0911   uint entry;
+0912   uint phoff;
+0913   uint shoff;
+0914   uint flags;
+0915   ushort ehsize;
+0916   ushort phentsize;
+0917   ushort phnum;
+0918   ushort shentsize;
+0919   ushort shnum;
+0920   ushort shstrndx;
+0921 };
+0922 
+0923 
+0924 struct proghdr {
+0925   uint type;
+0926   uint off;
+0927   uint vaddr;
+0928   uint paddr;
+0929   uint filesz;
+0930   uint memsz;
+0931   uint flags;
+0932   uint align;
+0933 };
+0934 
+0935 
+0936 #define ELF_PROG_LOAD           1
+0937 
+0938 
+0939 #define ELF_PROG_FLAG_EXEC      1
+0940 #define ELF_PROG_FLAG_WRITE     2
+0941 #define ELF_PROG_FLAG_READ      4
+0942 
+0943 
+0944 
+0945 
+0946 
+0947 
+0948 
+0949 
+0950 struct rtcdate {
+0951   uint second;
+0952   uint minute;
+0953   uint hour;
+0954   uint day;
+0955   uint month;
+0956   uint year;
+0957 };
+0958 
+0959 
+0960 
+0961 
+0962 
+0963 
+0964 
+0965 
+0966 
+0967 
+0968 
+0969 
+0970 
+0971 
+0972 
+0973 
+0974 
+0975 
+0976 
+0977 
+0978 
+0979 
+0980 
+0981 
+0982 
+0983 
+0984 
+0985 
+0986 
+0987 
+0988 
+0989 
+0990 
+0991 
+0992 
+0993 
+0994 
+0995 
+0996 
+0997 
+0998 
+0999 
+1000 
+1001 
+1002 
+1003 
+1004 
+1005 
+1006 
+1007 
+1008 
+1009 
+1010 
+1011 
+1012 
+1013 
+1014 
+1015 
+1016 
+1017 
+1018 
+1019 
+1020 
+1021 
+1022 
+1023 
+1024 
+1025 
+1026 .p2align 2
+1027 .text
+1028 .globl multiboot_header
+1029 multiboot_header:
+1030   
+1031   
+1032   .long magic
+1033   .long flags
+1034   .long (-magic-flags)
+1035 
+1036 
+1037 
+1038 
+1039 .globl _start
+1040 _start = V2P_WO(entry)
+1041 
+1042 
+1043 .globl entry
+1044 entry:
+1045   
+1046   movl    %cr4, %eax
+1047   orl     $(CR4_PSE), %eax
+1048   movl    %eax, %cr4
+1049   
+1050   movl    $(V2P_WO(entrypgdir)), %eax
+1051   movl    %eax, %cr3
+1052   
+1053   movl    %cr0, %eax
+1054   orl     $(CR0_PG|CR0_WP), %eax
+1055   movl    %eax, %cr0
+1056 
+1057   
+1058   movl $(stack + KSTACKSIZE), %esp
+1059 
+1060   
+1061   
+1062   
+1063   
+1064   mov $main, %eax
+1065   jmp *%eax
+1066 
+1067 .comm stack, KSTACKSIZE
+1068 
+1069 
+1070 
+1071 
+1072 
+1073 
+1074 
+1075 
+1076 
+1077 
+1078 
+1079 
+1080 
+1081 
+1082 
+1083 
+1084 
+1085 
+1086 
+1087 
+1088 
+1089 
+1090 
+1091 
+1092 
+1093 
+1094 
+1095 
+1096 
+1097 
+1098 
+1099 
+1100 
+1101 
+1102 
+1103 
+1104 
+1105 
+1106 
+1107 
+1108 
+1109 
+1110 
+1111 
+1112 
+1113 
+1114 
+1115 
+1116 
+1117 
+1118 
+1119 
+1120 
+1121 .code16
+1122 .globl start
+1123 start:
+1124   cli
+1125 
+1126   
+1127   xorw    %ax,%ax
+1128   movw    %ax,%ds
+1129   movw    %ax,%es
+1130   movw    %ax,%ss
+1131 
+1132   
+1133   
+1134   
+1135   lgdt    gdtdesc
+1136   movl    %cr0, %eax
+1137   orl     $CR0_PE, %eax
+1138   movl    %eax, %cr0
+1139 
+1140   
+1141   
+1142   
+1143   ljmpl    $(SEG_KCODE<<3), $(start32)
+1144 
+1145 
+1146 
+1147 
+1148 
+1149 
+1150 .code32  
+1151 start32:
+1152   
+1153   movw    $(SEG_KDATA<<3), %ax    
+1154   movw    %ax, %ds                
+1155   movw    %ax, %es                
+1156   movw    %ax, %ss                
+1157   movw    $0, %ax                 
+1158   movw    %ax, %fs                
+1159   movw    %ax, %gs                
+1160 
+1161   
+1162   movl    %cr4, %eax
+1163   orl     $(CR4_PSE), %eax
+1164   movl    %eax, %cr4
+1165   
+1166   movl    (start-12), %eax
+1167   movl    %eax, %cr3
+1168   
+1169   movl    %cr0, %eax
+1170   orl     $(CR0_PE|CR0_PG|CR0_WP), %eax
+1171   movl    %eax, %cr0
+1172 
+1173   
+1174   movl    (start-4), %esp
+1175   
+1176   call	 *(start-8)
+1177 
+1178   movw    $0x8a00, %ax
+1179   movw    %ax, %dx
+1180   outw    %ax, %dx
+1181   movw    $0x8ae0, %ax
+1182   outw    %ax, %dx
+1183 spin:
+1184   jmp     spin
+1185 
+1186 .p2align 2
+1187 gdt:
+1188   SEG_NULLASM
+1189   SEG_ASM(STA_X|STA_R, 0, 0xffffffff)
+1190   SEG_ASM(STA_W, 0, 0xffffffff)
+1191 
+1192 
+1193 gdtdesc:
+1194   .word   (gdtdesc - gdt - 1)
+1195   .long   gdt
+1196 
+1197 
+1198 
+1199 
+1200 #include "types.h"
+1201 #include "defs.h"
+1202 #include "param.h"
+1203 #include "memlayout.h"
+1204 #include "mmu.h"
+1205 #include "proc.h"
+1206 #include "x86.h"
+1207 
+1208 static void startothers(void);
+1209 static void mpmain(void)  __attribute__((noreturn));
+1210 extern pde_t *kpgdir;
+1211 extern char end[]; 
+1212 
+1213 
+1214 
+1215 
+1216 int
+1217 main(void)
+1218 {
+1219   kinit1(end, P2V(4*1024*1024)); 
+1220   kvmalloc();      
+1221   mpinit();        
+1222   lapicinit();     
+1223   seginit();       
+1224   picinit();       
+1225   ioapicinit();    
+1226   consoleinit();   
+1227   uartinit();      
+1228   pinit();         
+1229   tvinit();        
+1230   binit();         
+1231   fileinit();      
+1232   ideinit();       
+1233   startothers();   
+1234   kinit2(P2V(4*1024*1024), P2V(PHYSTOP)); 
+1235   userinit();      
+1236   mpmain();        
+1237 }
+1238 
+1239 
+1240 static void
+1241 mpenter(void)
+1242 {
+1243   switchkvm();
+1244   seginit();
+1245   lapicinit();
+1246   mpmain();
+1247 }
+1248 
+1249 
+1250 
+1251 static void
+1252 mpmain(void)
+1253 {
+1254   cprintf("cpu%d: starting %d\n", cpuid(), cpuid());
+1255   idtinit();       
+1256   xchg(&(mycpu()->started), 1); 
+1257   scheduler();     
+1258 }
+1259 
+1260 pde_t entrypgdir[];  
+1261 
+1262 
+1263 static void
+1264 startothers(void)
+1265 {
+1266   extern uchar _binary_entryother_start[], _binary_entryother_size[];
+1267   uchar *code;
+1268   struct cpu *c;
+1269   char *stack;
+1270 
+1271   
+1272   
+1273   
+1274   code = P2V(0x7000);
+1275   memmove(code, _binary_entryother_start, (uint)_binary_entryother_size);
+1276 
+1277   for(c = cpus; c < cpus+ncpu; c++){
+1278     if(c == mycpu())  
+1279       continue;
+1280 
+1281     
+1282     
+1283     
+1284     stack = kalloc();
+1285     *(void**)(code-4) = stack + KSTACKSIZE;
+1286     *(void(**)(void))(code-8) = mpenter;
+1287     *(int**)(code-12) = (void *) V2P(entrypgdir);
+1288 
+1289     lapicstartap(c->apicid, V2P(code));
+1290 
+1291     
+1292     while(c->started == 0)
+1293       ;
+1294   }
+1295 }
+1296 
+1297 
+1298 
+1299 
+1300 
+1301 
+1302 
+1303 
+1304 
+1305 __attribute__((__aligned__(PGSIZE)))
+1306 pde_t entrypgdir[NPDENTRIES] = {
+1307   
+1308   [0] = (0) | PTE_P | PTE_W | PTE_PS,
+1309   
+1310   [KERNBASE>>PDXSHIFT] = (0) | PTE_P | PTE_W | PTE_PS,
+1311 };
+1312 
+1313 
+1314 
+1315 
+1316 
+1317 
+1318 
+1319 
+1320 
+1321 
+1322 
+1323 
+1324 
+1325 
+1326 
+1327 
+1328 
+1329 
+1330 
+1331 
+1332 
+1333 
+1334 
+1335 
+1336 
+1337 
+1338 
+1339 
+1340 
+1341 
+1342 
+1343 
+1344 
+1345 
+1346 
+1347 
+1348 
+1349 
+1350 
+1351 
+1352 
+1353 
+1354 
+1355 
+1356 
+1357 
+1358 
+1359 
+1360 
+1361 
+1362 
+1363 
+1364 
+1365 
+1366 
+1367 
+1368 
+1369 
+1370 
+1371 
+1372 
+1373 
+1374 
+1375 
+1376 
+1377 
+1378 
+1379 
+1380 
+1381 
+1382 
+1383 
+1384 
+1385 
+1386 
+1387 
+1388 
+1389 
+1390 
+1391 
+1392 
+1393 
+1394 
+1395 
+1396 
+1397 
+1398 
+1399 
+1400 
+1401 
+1402 
+1403 
+1404 
+1405 
+1406 
+1407 
+1408 
+1409 
+1410 
+1411 
+1412 
+1413 
+1414 
+1415 
+1416 
+1417 
+1418 
+1419 
+1420 
+1421 
+1422 
+1423 
+1424 
+1425 
+1426 
+1427 
+1428 
+1429 
+1430 
+1431 
+1432 
+1433 
+1434 
+1435 
+1436 
+1437 
+1438 
+1439 
+1440 
+1441 
+1442 
+1443 
+1444 
+1445 
+1446 
+1447 
+1448 
+1449 
+1450 
+1451 
+1452 
+1453 
+1454 
+1455 
+1456 
+1457 
+1458 
+1459 
+1460 
+1461 
+1462 
+1463 
+1464 
+1465 
+1466 
+1467 
+1468 
+1469 
+1470 
+1471 
+1472 
+1473 
+1474 
+1475 
+1476 
+1477 
+1478 
+1479 
+1480 
+1481 
+1482 
+1483 
+1484 
+1485 
+1486 
+1487 
+1488 
+1489 
+1490 
+1491 
+1492 
+1493 
+1494 
+1495 
+1496 
+1497 
+1498 
+1499 
+1500 
+1501 struct spinlock {
+1502   uint locked;       
+1503 
+1504   
+1505   char *name;        
+1506   struct cpu *cpu;   
+1507   uint pcs[10];      
+1508                      
+1509 };
+1510 
+1511 
+1512 
+1513 
+1514 
+1515 
+1516 
+1517 
+1518 
+1519 
+1520 
+1521 
+1522 
+1523 
+1524 
+1525 
+1526 
+1527 
+1528 
+1529 
+1530 
+1531 
+1532 
+1533 
+1534 
+1535 
+1536 
+1537 
+1538 
+1539 
+1540 
+1541 
+1542 
+1543 
+1544 
+1545 
+1546 
+1547 
+1548 
+1549 
+1550 
+1551 
+1552 #include "types.h"
+1553 #include "defs.h"
+1554 #include "param.h"
+1555 #include "x86.h"
+1556 #include "memlayout.h"
+1557 #include "mmu.h"
+1558 #include "proc.h"
+1559 #include "spinlock.h"
+1560 
+1561 void
+1562 initlock(struct spinlock *lk, char *name)
+1563 {
+1564   lk->name = name;
+1565   lk->locked = 0;
+1566   lk->cpu = 0;
+1567 }
+1568 
+1569 
+1570 
+1571 
+1572 
+1573 void
+1574 acquire(struct spinlock *lk)
+1575 {
+1576   pushcli(); 
+1577   if(holding(lk))
+1578     panic("acquire");
+1579 
+1580   
+1581   while(xchg(&lk->locked, 1) != 0)
+1582     ;
+1583 
+1584   
+1585   
+1586   
+1587   __sync_synchronize();
+1588 
+1589   
+1590   lk->cpu = mycpu();
+1591   getcallerpcs(&lk, lk->pcs);
+1592 }
+1593 
+1594 
+1595 
+1596 
+1597 
+1598 
+1599 
+1600 
+1601 void
+1602 release(struct spinlock *lk)
+1603 {
+1604   if(!holding(lk))
+1605     panic("release");
+1606 
+1607   lk->pcs[0] = 0;
+1608   lk->cpu = 0;
+1609 
+1610   
+1611   
+1612   
+1613   
+1614   
+1615   __sync_synchronize();
+1616 
+1617   
+1618   
+1619   
+1620   asm volatile("movl $0, %0" : "+m" (lk->locked) : );
+1621 
+1622   popcli();
+1623 }
+1624 
+1625 
+1626 void
+1627 getcallerpcs(void *v, uint pcs[])
+1628 {
+1629   uint *ebp;
+1630   int i;
+1631 
+1632   ebp = (uint*)v - 2;
+1633   for(i = 0; i < 10; i++){
+1634     if(ebp == 0 || ebp < (uint*)KERNBASE || ebp == (uint*)0xffffffff)
+1635       break;
+1636     pcs[i] = ebp[1];     
+1637     ebp = (uint*)ebp[0]; 
+1638   }
+1639   for(; i < 10; i++)
+1640     pcs[i] = 0;
+1641 }
+1642 
+1643 
+1644 
+1645 
+1646 
+1647 
+1648 
+1649 
+1650 
+1651 int
+1652 holding(struct spinlock *lock)
+1653 {
+1654   int r;
+1655   pushcli();
+1656   r = lock->locked && lock->cpu == mycpu();
+1657   popcli();
+1658   return r;
+1659 }
+1660 
+1661 
+1662 
+1663 
+1664 
+1665 
+1666 void
+1667 pushcli(void)
+1668 {
+1669   int eflags;
+1670 
+1671   eflags = readeflags();
+1672   cli();
+1673   if(mycpu()->ncli == 0)
+1674     mycpu()->intena = eflags & FL_IF;
+1675   mycpu()->ncli += 1;
+1676 }
+1677 
+1678 void
+1679 popcli(void)
+1680 {
+1681   if(readeflags()&FL_IF)
+1682     panic("popcli - interruptible");
+1683   if(--mycpu()->ncli < 0)
+1684     panic("popcli");
+1685   if(mycpu()->ncli == 0 && mycpu()->intena)
+1686     sti();
+1687 }
+1688 
+1689 
+1690 
+1691 
+1692 
+1693 
+1694 
+1695 
+1696 
+1697 
+1698 
+1699 
+1700 #include "param.h"
+1701 #include "types.h"
+1702 #include "defs.h"
+1703 #include "x86.h"
+1704 #include "memlayout.h"
+1705 #include "mmu.h"
+1706 #include "proc.h"
+1707 #include "elf.h"
+1708 
+1709 extern char data[];  
+1710 pde_t *kpgdir;  
+1711 
+1712 
+1713 
+1714 void
+1715 seginit(void)
+1716 {
+1717   struct cpu *c;
+1718 
+1719   
+1720   
+1721   
+1722   
+1723   c = &cpus[cpuid()];
+1724   c->gdt[SEG_KCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, 0);
+1725   c->gdt[SEG_KDATA] = SEG(STA_W, 0, 0xffffffff, 0);
+1726   c->gdt[SEG_UCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, DPL_USER);
+1727   c->gdt[SEG_UDATA] = SEG(STA_W, 0, 0xffffffff, DPL_USER);
+1728   lgdt(c->gdt, sizeof(c->gdt));
+1729 }
+1730 
+1731 
+1732 
+1733 
+1734 static pte_t *
+1735 walkpgdir(pde_t *pgdir, const void *va, int alloc)
+1736 {
+1737   pde_t *pde;
+1738   pte_t *pgtab;
+1739 
+1740   pde = &pgdir[PDX(va)];
+1741   if(*pde & PTE_P){
+1742     pgtab = (pte_t*)P2V(PTE_ADDR(*pde));
+1743   } else {
+1744     if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
+1745       return 0;
+1746     
+1747     memset(pgtab, 0, PGSIZE);
+1748     
+1749     
+1750     
+1751     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
+1752   }
+1753   return &pgtab[PTX(va)];
+1754 }
+1755 
+1756 
+1757 
+1758 
+1759 static int
+1760 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
+1761 {
+1762   char *a, *last;
+1763   pte_t *pte;
+1764 
+1765   a = (char*)PGROUNDDOWN((uint)va);
+1766   last = (char*)PGROUNDDOWN(((uint)va) + size - 1);
+1767   for(;;){
+1768     if((pte = walkpgdir(pgdir, a, 1)) == 0)
+1769       return -1;
+1770     if(*pte & PTE_P)
+1771       panic("remap");
+1772     *pte = pa | perm | PTE_P;
+1773     if(a == last)
+1774       break;
+1775     a += PGSIZE;
+1776     pa += PGSIZE;
+1777   }
+1778   return 0;
+1779 }
+1780 
+1781 
+1782 
+1783 
+1784 
+1785 
+1786 
+1787 
+1788 
+1789 
+1790 
+1791 
+1792 
+1793 
+1794 
+1795 
+1796 
+1797 
+1798 
+1799 
+1800 
+1801 
+1802 
+1803 
+1804 static struct kmap {
+1805   void *virt;
+1806   uint phys_start;
+1807   uint phys_end;
+1808   int perm;
+1809 } kmap[] = {
+1810  { (void*)KERNBASE, 0,             EXTMEM,    PTE_W}, 
+1811  { (void*)KERNLINK, V2P(KERNLINK), V2P(data), 0},     
+1812  { (void*)data,     V2P(data),     PHYSTOP,   PTE_W}, 
+1813  { (void*)DEVSPACE, DEVSPACE,      0,         PTE_W}, 
+1814 };
+1815 
+1816 
+1817 pde_t*
+1818 setupkvm(void)
+1819 {
+1820   pde_t *pgdir;
+1821   struct kmap *k;
+1822 
+1823   if((pgdir = (pde_t*)kalloc()) == 0)
+1824     return 0;
+1825   memset(pgdir, 0, PGSIZE);
+1826   if (P2V(PHYSTOP) > (void*)DEVSPACE)
+1827     panic("PHYSTOP too high");
+1828   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
+1829     if(mappages(pgdir, k->virt, k->phys_end - k->phys_start,
+1830                 (uint)k->phys_start, k->perm) < 0) {
+1831       freevm(pgdir);
+1832       return 0;
+1833     }
+1834   return pgdir;
+1835 }
+1836 
+1837 
+1838 
+1839 void
+1840 kvmalloc(void)
+1841 {
+1842   kpgdir = setupkvm();
+1843   switchkvm();
+1844 }
+1845 
+1846 
+1847 
+1848 
+1849 
+1850 
+1851 
+1852 void
+1853 switchkvm(void)
+1854 {
+1855   lcr3(V2P(kpgdir));   
+1856 }
+1857 
+1858 
+1859 void
+1860 switchuvm(struct proc *p)
+1861 {
+1862   if(p == 0)
+1863     panic("switchuvm: no process");
+1864   if(p->kstack == 0)
+1865     panic("switchuvm: no kstack");
+1866   if(p->pgdir == 0)
+1867     panic("switchuvm: no pgdir");
+1868 
+1869   pushcli();
+1870   mycpu()->gdt[SEG_TSS] = SEG16(STS_T32A, &mycpu()->ts,
+1871                                 sizeof(mycpu()->ts)-1, 0);
+1872   mycpu()->gdt[SEG_TSS].s = 0;
+1873   mycpu()->ts.ss0 = SEG_KDATA << 3;
+1874   mycpu()->ts.esp0 = (uint)p->kstack + KSTACKSIZE;
+1875   
+1876   
+1877   mycpu()->ts.iomb = (ushort) 0xFFFF;
+1878   ltr(SEG_TSS << 3);
+1879   lcr3(V2P(p->pgdir));  
+1880   popcli();
+1881 }
+1882 
+1883 
+1884 
+1885 void
+1886 inituvm(pde_t *pgdir, char *init, uint sz)
+1887 {
+1888   char *mem;
+1889 
+1890   if(sz >= PGSIZE)
+1891     panic("inituvm: more than a page");
+1892   mem = kalloc();
+1893   memset(mem, 0, PGSIZE);
+1894   mappages(pgdir, 0, PGSIZE, V2P(mem), PTE_W|PTE_U);
+1895   memmove(mem, init, sz);
+1896 }
+1897 
+1898 
+1899 
+1900 
+1901 
+1902 int
+1903 loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
+1904 {
+1905   uint i, pa, n;
+1906   pte_t *pte;
+1907 
+1908   if((uint) addr % PGSIZE != 0)
+1909     panic("loaduvm: addr must be page aligned");
+1910   for(i = 0; i < sz; i += PGSIZE){
+1911     if((pte = walkpgdir(pgdir, addr+i, 0)) == 0)
+1912       panic("loaduvm: address should exist");
+1913     pa = PTE_ADDR(*pte);
+1914     if(sz - i < PGSIZE)
+1915       n = sz - i;
+1916     else
+1917       n = PGSIZE;
+1918     if(readi(ip, P2V(pa), offset+i, n) != n)
+1919       return -1;
+1920   }
+1921   return 0;
+1922 }
+1923 
+1924 
+1925 
+1926 int
+1927 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
+1928 {
+1929   char *mem;
+1930   uint a;
+1931 
+1932   if(newsz >= KERNBASE)
+1933     return 0;
+1934   if(newsz < oldsz)
+1935     return oldsz;
+1936 
+1937   a = PGROUNDUP(oldsz);
+1938   for(; a < newsz; a += PGSIZE){
+1939     mem = kalloc();
+1940     if(mem == 0){
+1941       cprintf("allocuvm out of memory\n");
+1942       deallocuvm(pgdir, newsz, oldsz);
+1943       return 0;
+1944     }
+1945     memset(mem, 0, PGSIZE);
+1946     if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){
+1947       cprintf("allocuvm out of memory (2)\n");
+1948       deallocuvm(pgdir, newsz, oldsz);
+1949       kfree(mem);
+1950       return 0;
+1951     }
+1952   }
+1953   return newsz;
+1954 }
+1955 
+1956 
+1957 
+1958 
+1959 
+1960 int
+1961 deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
+1962 {
+1963   pte_t *pte;
+1964   uint a, pa;
+1965 
+1966   if(newsz >= oldsz)
+1967     return oldsz;
+1968 
+1969   a = PGROUNDUP(newsz);
+1970   for(; a  < oldsz; a += PGSIZE){
+1971     pte = walkpgdir(pgdir, (char*)a, 0);
+1972     if(!pte)
+1973       a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
+1974     else if((*pte & PTE_P) != 0){
+1975       pa = PTE_ADDR(*pte);
+1976       if(pa == 0)
+1977         panic("kfree");
+1978       char *v = P2V(pa);
+1979       kfree(v);
+1980       *pte = 0;
+1981     }
+1982   }
+1983   return newsz;
+1984 }
+1985 
+1986 
+1987 
+1988 
+1989 
+1990 
+1991 
+1992 
+1993 
+1994 
+1995 
+1996 
+1997 
+1998 
+1999 
+2000 
+2001 
+2002 void
+2003 freevm(pde_t *pgdir)
+2004 {
+2005   uint i;
+2006 
+2007   if(pgdir == 0)
+2008     panic("freevm: no pgdir");
+2009   deallocuvm(pgdir, KERNBASE, 0);
+2010   for(i = 0; i < NPDENTRIES; i++){
+2011     if(pgdir[i] & PTE_P){
+2012       char * v = P2V(PTE_ADDR(pgdir[i]));
+2013       kfree(v);
+2014     }
+2015   }
+2016   kfree((char*)pgdir);
+2017 }
+2018 
+2019 
+2020 
+2021 void
+2022 clearpteu(pde_t *pgdir, char *uva)
+2023 {
+2024   pte_t *pte;
+2025 
+2026   pte = walkpgdir(pgdir, uva, 0);
+2027   if(pte == 0)
+2028     panic("clearpteu");
+2029   *pte &= ~PTE_U;
+2030 }
+2031 
+2032 
+2033 
+2034 pde_t*
+2035 copyuvm(pde_t *pgdir, uint sz)
+2036 {
+2037   pde_t *d;
+2038   pte_t *pte;
+2039   uint pa, i, flags;
+2040   char *mem;
+2041 
+2042   if((d = setupkvm()) == 0)
+2043     return 0;
+2044   for(i = 0; i < sz; i += PGSIZE){
+2045     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+2046       panic("copyuvm: pte should exist");
+2047     if(!(*pte & PTE_P))
+2048       panic("copyuvm: page not present");
+2049     pa = PTE_ADDR(*pte);
+2050     flags = PTE_FLAGS(*pte);
+2051     if((mem = kalloc()) == 0)
+2052       goto bad;
+2053     memmove(mem, (char*)P2V(pa), PGSIZE);
+2054     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
+2055       kfree(mem);
+2056       goto bad;
+2057     }
+2058   }
+2059   return d;
+2060 
+2061 bad:
+2062   freevm(d);
+2063   return 0;
+2064 }
+2065 
+2066 
+2067 
+2068 
+2069 
+2070 
+2071 
+2072 
+2073 
+2074 
+2075 
+2076 
+2077 
+2078 
+2079 
+2080 
+2081 
+2082 
+2083 
+2084 
+2085 
+2086 
+2087 
+2088 
+2089 
+2090 
+2091 
+2092 
+2093 
+2094 
+2095 
+2096 
+2097 
+2098 
+2099 
+2100 
+2101 char*
+2102 uva2ka(pde_t *pgdir, char *uva)
+2103 {
+2104   pte_t *pte;
+2105 
+2106   pte = walkpgdir(pgdir, uva, 0);
+2107   if((*pte & PTE_P) == 0)
+2108     return 0;
+2109   if((*pte & PTE_U) == 0)
+2110     return 0;
+2111   return (char*)P2V(PTE_ADDR(*pte));
+2112 }
+2113 
+2114 
+2115 
+2116 
+2117 int
+2118 copyout(pde_t *pgdir, uint va, void *p, uint len)
+2119 {
+2120   char *buf, *pa0;
+2121   uint n, va0;
+2122 
+2123   buf = (char*)p;
+2124   while(len > 0){
+2125     va0 = (uint)PGROUNDDOWN(va);
+2126     pa0 = uva2ka(pgdir, (char*)va0);
+2127     if(pa0 == 0)
+2128       return -1;
+2129     n = PGSIZE - (va - va0);
+2130     if(n > len)
+2131       n = len;
+2132     memmove(pa0 + (va - va0), buf, n);
+2133     len -= n;
+2134     buf += n;
+2135     va = va0 + PGSIZE;
+2136   }
+2137   return 0;
+2138 }
+2139 
+2140 
+2141 
+2142 
+2143 
+2144 
+2145 
+2146 
+2147 
+2148 
+2149 
+2150 
+2151 
+2152 
+2153 
+2154 
+2155 
+2156 
+2157 
+2158 
+2159 
+2160 
+2161 
+2162 
+2163 
+2164 
+2165 
+2166 
+2167 
+2168 
+2169 
+2170 
+2171 
+2172 
+2173 
+2174 
+2175 
+2176 
+2177 
+2178 
+2179 
+2180 
+2181 
+2182 
+2183 
+2184 
+2185 
+2186 
+2187 
+2188 
+2189 
+2190 
+2191 
+2192 
+2193 
+2194 
+2195 
+2196 
+2197 
+2198 
+2199 
+2200 
+2201 
+2202 
+2203 
+2204 
+2205 
+2206 
+2207 
+2208 
+2209 
+2210 
+2211 
+2212 
+2213 
+2214 
+2215 
+2216 
+2217 
+2218 
+2219 
+2220 
+2221 
+2222 
+2223 
+2224 
+2225 
+2226 
+2227 
+2228 
+2229 
+2230 
+2231 
+2232 
+2233 
+2234 
+2235 
+2236 
+2237 
+2238 
+2239 
+2240 
+2241 
+2242 
+2243 
+2244 
+2245 
+2246 
+2247 
+2248 
+2249 
+2250 
+2251 
+2252 
+2253 
+2254 
+2255 
+2256 
+2257 
+2258 
+2259 
+2260 
+2261 
+2262 
+2263 
+2264 
+2265 
+2266 
+2267 
+2268 
+2269 
+2270 
+2271 
+2272 
+2273 
+2274 
+2275 
+2276 
+2277 
+2278 
+2279 
+2280 
+2281 
+2282 
+2283 
+2284 
+2285 
+2286 
+2287 
+2288 
+2289 
+2290 
+2291 
+2292 
+2293 
+2294 
+2295 
+2296 
+2297 
+2298 
+2299 
+2300 
+2301 struct cpu {
+2302   uchar apicid;                
+2303   struct context *scheduler;   
+2304   struct taskstate ts;         
+2305   struct segdesc gdt[NSEGS];   
+2306   volatile uint started;       
+2307   int ncli;                    
+2308   int intena;                  
+2309   struct proc *proc;           
+2310 };
+2311 
+2312 extern struct cpu cpus[NCPU];
+2313 extern int ncpu;
+2314 
+2315 
+2316 
+2317 
+2318 
+2319 
+2320 
+2321 
+2322 
+2323 
+2324 
+2325 
+2326 struct context {
+2327   uint edi;
+2328   uint esi;
+2329   uint ebx;
+2330   uint ebp;
+2331   uint eip;
+2332 };
+2333 
+2334 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+2335 
+2336 
+2337 struct proc {
+2338   uint sz;                     
+2339   pde_t* pgdir;                
+2340   char *kstack;                
+2341   enum procstate state;        
+2342   int pid;                     
+2343   struct proc *parent;         
+2344   struct trapframe *tf;        
+2345   struct context *context;     
+2346   void *chan;                  
+2347   int killed;                  
+2348   struct file *ofile[NOFILE];  
+2349   struct inode *cwd;           
+2350   char name[16];               
+2351 };
+2352 
+2353 
+2354 
+2355 
+2356 
+2357 
+2358 
+2359 
+2360 
+2361 
+2362 
+2363 
+2364 
+2365 
+2366 
+2367 
+2368 
+2369 
+2370 
+2371 
+2372 
+2373 
+2374 
+2375 
+2376 
+2377 
+2378 
+2379 
+2380 
+2381 
+2382 
+2383 
+2384 
+2385 
+2386 
+2387 
+2388 
+2389 
+2390 
+2391 
+2392 
+2393 
+2394 
+2395 
+2396 
+2397 
+2398 
+2399 
+2400 #include "types.h"
+2401 #include "defs.h"
+2402 #include "param.h"
+2403 #include "memlayout.h"
+2404 #include "mmu.h"
+2405 #include "x86.h"
+2406 #include "proc.h"
+2407 #include "spinlock.h"
+2408 
+2409 struct {
+2410   struct spinlock lock;
+2411   struct proc proc[NPROC];
+2412 } ptable;
+2413 
+2414 static struct proc *initproc;
+2415 
+2416 int nextpid = 1;
+2417 extern void forkret(void);
+2418 extern void trapret(void);
+2419 
+2420 static void wakeup1(void *chan);
+2421 
+2422 void
+2423 pinit(void)
+2424 {
+2425   initlock(&ptable.lock, "ptable");
+2426 }
+2427 
+2428 
+2429 int
+2430 cpuid() {
+2431   return mycpu()-cpus;
+2432 }
+2433 
+2434 
+2435 
+2436 struct cpu*
+2437 mycpu(void)
+2438 {
+2439   int apicid, i;
+2440 
+2441   if(readeflags()&FL_IF)
+2442     panic("mycpu called with interrupts enabled\n");
+2443 
+2444   apicid = lapicid();
+2445   
+2446   
+2447   for (i = 0; i < ncpu; ++i) {
+2448     if (cpus[i].apicid == apicid)
+2449       return &cpus[i];
+2450   }
+2451   panic("unknown apicid\n");
+2452 }
+2453 
+2454 
+2455 
+2456 struct proc*
+2457 myproc(void) {
+2458   struct cpu *c;
+2459   struct proc *p;
+2460   pushcli();
+2461   c = mycpu();
+2462   p = c->proc;
+2463   popcli();
+2464   return p;
+2465 }
+2466 
+2467 
+2468 
+2469 
+2470 
+2471 
+2472 static struct proc*
+2473 allocproc(void)
+2474 {
+2475   struct proc *p;
+2476   char *sp;
+2477 
+2478   acquire(&ptable.lock);
+2479 
+2480   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+2481     if(p->state == UNUSED)
+2482       goto found;
+2483 
+2484   release(&ptable.lock);
+2485   return 0;
+2486 
+2487 found:
+2488   p->state = EMBRYO;
+2489   p->pid = nextpid++;
+2490 
+2491   release(&ptable.lock);
+2492 
+2493   
+2494   if((p->kstack = kalloc()) == 0){
+2495     p->state = UNUSED;
+2496     return 0;
+2497   }
+2498   sp = p->kstack + KSTACKSIZE;
+2499 
+2500   
+2501   sp -= sizeof *p->tf;
+2502   p->tf = (struct trapframe*)sp;
+2503 
+2504   
+2505   
+2506   sp -= 4;
+2507   *(uint*)sp = (uint)trapret;
+2508 
+2509   sp -= sizeof *p->context;
+2510   p->context = (struct context*)sp;
+2511   memset(p->context, 0, sizeof *p->context);
+2512   p->context->eip = (uint)forkret;
+2513 
+2514   return p;
+2515 }
+2516 
+2517 
+2518 
+2519 void
+2520 userinit(void)
+2521 {
+2522   struct proc *p;
+2523   extern char _binary_initcode_start[], _binary_initcode_size[];
+2524 
+2525   p = allocproc();
+2526 
+2527   initproc = p;
+2528   if((p->pgdir = setupkvm()) == 0)
+2529     panic("userinit: out of memory?");
+2530   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
+2531   p->sz = PGSIZE;
+2532   memset(p->tf, 0, sizeof(*p->tf));
+2533   p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
+2534   p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
+2535   p->tf->es = p->tf->ds;
+2536   p->tf->ss = p->tf->ds;
+2537   p->tf->eflags = FL_IF;
+2538   p->tf->esp = PGSIZE;
+2539   p->tf->eip = 0;  
+2540 
+2541   safestrcpy(p->name, "initcode", sizeof(p->name));
+2542   p->cwd = namei("/");
+2543 
+2544   
+2545   
+2546   
+2547   
+2548   acquire(&ptable.lock);
+2549 
+2550   p->state = RUNNABLE;
+2551 
+2552   release(&ptable.lock);
+2553 }
+2554 
+2555 
+2556 
+2557 int
+2558 growproc(int n)
+2559 {
+2560   uint sz;
+2561   struct proc *curproc = myproc();
+2562 
+2563   sz = curproc->sz;
+2564   if(n > 0){
+2565     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
+2566       return -1;
+2567   } else if(n < 0){
+2568     if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0)
+2569       return -1;
+2570   }
+2571   curproc->sz = sz;
+2572   switchuvm(curproc);
+2573   return 0;
+2574 }
+2575 
+2576 
+2577 
+2578 
+2579 int
+2580 fork(void)
+2581 {
+2582   int i, pid;
+2583   struct proc *np;
+2584   struct proc *curproc = myproc();
+2585 
+2586   
+2587   if((np = allocproc()) == 0){
+2588     return -1;
+2589   }
+2590 
+2591   
+2592   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+2593     kfree(np->kstack);
+2594     np->kstack = 0;
+2595     np->state = UNUSED;
+2596     return -1;
+2597   }
+2598   np->sz = curproc->sz;
+2599   np->parent = curproc;
+2600   *np->tf = *curproc->tf;
+2601 
+2602   
+2603   np->tf->eax = 0;
+2604 
+2605   for(i = 0; i < NOFILE; i++)
+2606     if(curproc->ofile[i])
+2607       np->ofile[i] = filedup(curproc->ofile[i]);
+2608   np->cwd = idup(curproc->cwd);
+2609 
+2610   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+2611 
+2612   pid = np->pid;
+2613 
+2614   acquire(&ptable.lock);
+2615 
+2616   np->state = RUNNABLE;
+2617 
+2618   release(&ptable.lock);
+2619 
+2620   return pid;
+2621 }
+2622 
+2623 
+2624 
+2625 
+2626 void
+2627 exit(void)
+2628 {
+2629   struct proc *curproc = myproc();
+2630   struct proc *p;
+2631   int fd;
+2632 
+2633   if(curproc == initproc)
+2634     panic("init exiting");
+2635 
+2636   
+2637   for(fd = 0; fd < NOFILE; fd++){
+2638     if(curproc->ofile[fd]){
+2639       fileclose(curproc->ofile[fd]);
+2640       curproc->ofile[fd] = 0;
+2641     }
+2642   }
+2643 
+2644   begin_op();
+2645   iput(curproc->cwd);
+2646   end_op();
+2647   curproc->cwd = 0;
+2648 
+2649   acquire(&ptable.lock);
+2650   
+2651   wakeup1(curproc->parent);
+2652 
+2653   
+2654   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+2655     if(p->parent == curproc){
+2656       p->parent = initproc;
+2657       if(p->state == ZOMBIE)
+2658         wakeup1(initproc);
+2659     }
+2660   }
+2661 
+2662   
+2663   curproc->state = ZOMBIE;
+2664   sched();
+2665   panic("zombie exit");
+2666 }
+2667 
+2668 
+2669 
+2670 int
+2671 wait(void)
+2672 {
+2673   struct proc *p;
+2674   int havekids, pid;
+2675   struct proc *curproc = myproc();
+2676 
+2677   acquire(&ptable.lock);
+2678   for(;;){
+2679     
+2680     havekids = 0;
+2681     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+2682       if(p->parent != curproc)
+2683         continue;
+2684       havekids = 1;
+2685       if(p->state == ZOMBIE){
+2686         
+2687         pid = p->pid;
+2688         kfree(p->kstack);
+2689         p->kstack = 0;
+2690         freevm(p->pgdir);
+2691         p->pid = 0;
+2692         p->parent = 0;
+2693         p->name[0] = 0;
+2694         p->killed = 0;
+2695         p->state = UNUSED;
+2696         release(&ptable.lock);
+2697         return pid;
+2698       }
+2699     }
+2700     
+2701     if(!havekids || curproc->killed){
+2702       release(&ptable.lock);
+2703       return -1;
+2704     }
+2705 
+2706     
+2707     sleep(curproc, &ptable.lock);  
+2708   }
+2709 }
+2710 
+2711 
+2712 
+2713 
+2714 
+2715 
+2716 
+2717 
+2718 
+2719 
+2720 
+2721 
+2722 
+2723 
+2724 
+2725 
+2726 
+2727 
+2728 
+2729 
+2730 
+2731 
+2732 
+2733 
+2734 
+2735 
+2736 
+2737 
+2738 
+2739 
+2740 
+2741 
+2742 
+2743 
+2744 
+2745 
+2746 
+2747 
+2748 
+2749 
+2750 
+2751 
+2752 
+2753 
+2754 
+2755 
+2756 
+2757 void
+2758 scheduler(void)
+2759 {
+2760   struct proc *p;
+2761   struct cpu *c = mycpu();
+2762   c->proc = 0;
+2763 
+2764   for(;;){
+2765     
+2766     sti();
+2767 
+2768     
+2769     acquire(&ptable.lock);
+2770     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+2771       if(p->state != RUNNABLE)
+2772         continue;
+2773 
+2774       
+2775       
+2776       
+2777       c->proc = p;
+2778       switchuvm(p);
+2779       p->state = RUNNING;
+2780 
+2781       swtch(&(c->scheduler), p->context);
+2782       switchkvm();
+2783 
+2784       
+2785       
+2786       c->proc = 0;
+2787     }
+2788     release(&ptable.lock);
+2789 
+2790   }
+2791 }
+2792 
+2793 
+2794 
+2795 
+2796 
+2797 
+2798 
+2799 
+2800 
+2801 
+2802 
+2803 
+2804 
+2805 
+2806 
+2807 void
+2808 sched(void)
+2809 {
+2810   int intena;
+2811   struct proc *p = myproc();
+2812 
+2813   if(!holding(&ptable.lock))
+2814     panic("sched ptable.lock");
+2815   if(mycpu()->ncli != 1)
+2816     panic("sched locks");
+2817   if(p->state == RUNNING)
+2818     panic("sched running");
+2819   if(readeflags()&FL_IF)
+2820     panic("sched interruptible");
+2821   intena = mycpu()->intena;
+2822   swtch(&p->context, mycpu()->scheduler);
+2823   mycpu()->intena = intena;
+2824 }
+2825 
+2826 
+2827 void
+2828 yield(void)
+2829 {
+2830   acquire(&ptable.lock);  
+2831   myproc()->state = RUNNABLE;
+2832   sched();
+2833   release(&ptable.lock);
+2834 }
+2835 
+2836 
+2837 
+2838 
+2839 
+2840 
+2841 
+2842 
+2843 
+2844 
+2845 
+2846 
+2847 
+2848 
+2849 
+2850 
+2851 
+2852 void
+2853 forkret(void)
+2854 {
+2855   static int first = 1;
+2856   
+2857   release(&ptable.lock);
+2858 
+2859   if (first) {
+2860     
+2861     
+2862     
+2863     first = 0;
+2864     iinit(ROOTDEV);
+2865     initlog(ROOTDEV);
+2866   }
+2867 
+2868   
+2869 }
+2870 
+2871 
+2872 
+2873 void
+2874 sleep(void *chan, struct spinlock *lk)
+2875 {
+2876   struct proc *p = myproc();
+2877 
+2878   if(p == 0)
+2879     panic("sleep");
+2880 
+2881   if(lk == 0)
+2882     panic("sleep without lk");
+2883 
+2884   
+2885   
+2886   
+2887   
+2888   
+2889   
+2890   if(lk != &ptable.lock){  
+2891     acquire(&ptable.lock);  
+2892     release(lk);
+2893   }
+2894   
+2895   p->chan = chan;
+2896   p->state = SLEEPING;
+2897 
+2898   sched();
+2899 
+2900   
+2901   p->chan = 0;
+2902 
+2903   
+2904   if(lk != &ptable.lock){  
+2905     release(&ptable.lock);
+2906     acquire(lk);
+2907   }
+2908 }
+2909 
+2910 
+2911 
+2912 
+2913 
+2914 
+2915 
+2916 
+2917 
+2918 
+2919 
+2920 
+2921 
+2922 
+2923 
+2924 
+2925 
+2926 
+2927 
+2928 
+2929 
+2930 
+2931 
+2932 
+2933 
+2934 
+2935 
+2936 
+2937 
+2938 
+2939 
+2940 
+2941 
+2942 
+2943 
+2944 
+2945 
+2946 
+2947 
+2948 
+2949 
+2950 
+2951 
+2952 static void
+2953 wakeup1(void *chan)
+2954 {
+2955   struct proc *p;
+2956 
+2957   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+2958     if(p->state == SLEEPING && p->chan == chan)
+2959       p->state = RUNNABLE;
+2960 }
+2961 
+2962 
+2963 void
+2964 wakeup(void *chan)
+2965 {
+2966   acquire(&ptable.lock);
+2967   wakeup1(chan);
+2968   release(&ptable.lock);
+2969 }
+2970 
+2971 
+2972 
+2973 
+2974 int
+2975 kill(int pid)
+2976 {
+2977   struct proc *p;
+2978 
+2979   acquire(&ptable.lock);
+2980   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+2981     if(p->pid == pid){
+2982       p->killed = 1;
+2983       
+2984       if(p->state == SLEEPING)
+2985         p->state = RUNNABLE;
+2986       release(&ptable.lock);
+2987       return 0;
+2988     }
+2989   }
+2990   release(&ptable.lock);
+2991   return -1;
+2992 }
+2993 
+2994 
+2995 
+2996 
+2997 
+2998 
+2999 
+3000 
+3001 
+3002 
+3003 void
+3004 procdump(void)
+3005 {
+3006   static char *states[] = {
+3007   [UNUSED]    "unused",
+3008   [EMBRYO]    "embryo",
+3009   [SLEEPING]  "sleep ",
+3010   [RUNNABLE]  "runble",
+3011   [RUNNING]   "run   ",
+3012   [ZOMBIE]    "zombie"
+3013   };
+3014   int i;
+3015   struct proc *p;
+3016   char *state;
+3017   uint pc[10];
+3018 
+3019   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+3020     if(p->state == UNUSED)
+3021       continue;
+3022     if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
+3023       state = states[p->state];
+3024     else
+3025       state = "???";
+3026     cprintf("%d %s %s", p->pid, state, p->name);
+3027     if(p->state == SLEEPING){
+3028       getcallerpcs((uint*)p->context->ebp+2, pc);
+3029       for(i=0; i<10 && pc[i] != 0; i++)
+3030         cprintf(" %p", pc[i]);
+3031     }
+3032     cprintf("\n");
+3033   }
+3034 }
+3035 
+3036 
+3037 
+3038 
+3039 
+3040 
+3041 
+3042 
+3043 
+3044 
+3045 
+3046 
+3047 
+3048 
+3049 
+3050 
+3051 
+3052 
+3053 
+3054 
+3055 
+3056 
+3057 
+3058 .globl swtch
+3059 swtch:
+3060   movl 4(%esp), %eax
+3061   movl 8(%esp), %edx
+3062 
+3063   
+3064   pushl %ebp
+3065   pushl %ebx
+3066   pushl %esi
+3067   pushl %edi
+3068 
+3069   
+3070   movl %esp, (%eax)
+3071   movl %edx, %esp
+3072 
+3073   
+3074   popl %edi
+3075   popl %esi
+3076   popl %ebx
+3077   popl %ebp
+3078   ret
+3079 
+3080 
+3081 
+3082 
+3083 
+3084 
+3085 
+3086 
+3087 
+3088 
+3089 
+3090 
+3091 
+3092 
+3093 
+3094 
+3095 
+3096 
+3097 
+3098 
+3099 
+3100 
+3101 
+3102 
+3103 
+3104 #include "types.h"
+3105 #include "defs.h"
+3106 #include "param.h"
+3107 #include "memlayout.h"
+3108 #include "mmu.h"
+3109 #include "spinlock.h"
+3110 
+3111 void freerange(void *vstart, void *vend);
+3112 extern char end[]; 
+3113                    
+3114 
+3115 struct run {
+3116   struct run *next;
+3117 };
+3118 
+3119 struct {
+3120   struct spinlock lock;
+3121   int use_lock;
+3122   struct run *freelist;
+3123 } kmem;
+3124 
+3125 
+3126 
+3127 
+3128 
+3129 
+3130 void
+3131 kinit1(void *vstart, void *vend)
+3132 {
+3133   initlock(&kmem.lock, "kmem");
+3134   kmem.use_lock = 0;
+3135   freerange(vstart, vend);
+3136 }
+3137 
+3138 void
+3139 kinit2(void *vstart, void *vend)
+3140 {
+3141   freerange(vstart, vend);
+3142   kmem.use_lock = 1;
+3143 }
+3144 
+3145 
+3146 
+3147 
+3148 
+3149 
+3150 void
+3151 freerange(void *vstart, void *vend)
+3152 {
+3153   char *p;
+3154   p = (char*)PGROUNDUP((uint)vstart);
+3155   for(; p + PGSIZE <= (char*)vend; p += PGSIZE)
+3156     kfree(p);
+3157 }
+3158 
+3159 
+3160 
+3161 
+3162 
+3163 void
+3164 kfree(char *v)
+3165 {
+3166   struct run *r;
+3167 
+3168   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
+3169     panic("kfree");
+3170 
+3171   
+3172   memset(v, 1, PGSIZE);
+3173 
+3174   if(kmem.use_lock)
+3175     acquire(&kmem.lock);
+3176   r = (struct run*)v;
+3177   r->next = kmem.freelist;
+3178   kmem.freelist = r;
+3179   if(kmem.use_lock)
+3180     release(&kmem.lock);
+3181 }
+3182 
+3183 
+3184 
+3185 
+3186 char*
+3187 kalloc(void)
+3188 {
+3189   struct run *r;
+3190 
+3191   if(kmem.use_lock)
+3192     acquire(&kmem.lock);
+3193   r = kmem.freelist;
+3194   if(r)
+3195     kmem.freelist = r->next;
+3196   if(kmem.use_lock)
+3197     release(&kmem.lock);
+3198   return (char*)r;
+3199 }
+3200 
+3201 
+3202 
+3203 #define T_DIVIDE         0      
+3204 #define T_DEBUG          1      
+3205 #define T_NMI            2      
+3206 #define T_BRKPT          3      
+3207 #define T_OFLOW          4      
+3208 #define T_BOUND          5      
+3209 #define T_ILLOP          6      
+3210 #define T_DEVICE         7      
+3211 #define T_DBLFLT         8      
+3212 
+3213 #define T_TSS           10      
+3214 #define T_SEGNP         11      
+3215 #define T_STACK         12      
+3216 #define T_GPFLT         13      
+3217 #define T_PGFLT         14      
+3218 
+3219 #define T_FPERR         16      
+3220 #define T_ALIGN         17      
+3221 #define T_MCHK          18      
+3222 #define T_SIMDERR       19      
+3223 
+3224 
+3225 
+3226 #define T_SYSCALL       64      
+3227 #define T_DEFAULT      500      
+3228 
+3229 #define T_IRQ0          32      
+3230 
+3231 #define IRQ_TIMER        0
+3232 #define IRQ_KBD          1
+3233 #define IRQ_COM1         4
+3234 #define IRQ_IDE         14
+3235 #define IRQ_ERROR       19
+3236 #define IRQ_SPURIOUS    31
+3237 
+3238 
+3239 
+3240 
+3241 
+3242 
+3243 
+3244 
+3245 
+3246 
+3247 
+3248 
+3249 
+3250 #!/usr/bin/perl -w
+3251 
+3252 # Generate vectors.S, the trap/interrupt entry points.
+3253 # There has to be one entry point per interrupt number
+3254 # since otherwise there's no way for trap() to discover
+3255 # the interrupt number.
+3256 
+3257 print "# generated by vectors.pl - do not edit\n";
+3258 print "# handlers\n";
+3259 print ".globl alltraps\n";
+3260 for(my $i = 0; $i < 256; $i++){
+3261     print ".globl vector$i\n";
+3262     print "vector$i:\n";
+3263     if(!($i == 8 || ($i >= 10 && $i <= 14) || $i == 17)){
+3264         print "  pushl \$0\n";
+3265     }
+3266     print "  pushl \$$i\n";
+3267     print "  jmp alltraps\n";
+3268 }
+3269 
+3270 print "\n# vector table\n";
+3271 print ".data\n";
+3272 print ".globl vectors\n";
+3273 print "vectors:\n";
+3274 for(my $i = 0; $i < 256; $i++){
+3275     print "  .long vector$i\n";
+3276 }
+3277 
+3278 # sample output:
+3279 #   # handlers
+3280 #   .globl alltraps
+3281 #   .globl vector0
+3282 #   vector0:
+3283 #     pushl $0
+3284 #     pushl $0
+3285 #     jmp alltraps
+3286 #   ...
+3287 #
+3288 #   # vector table
+3289 #   .data
+3290 #   .globl vectors
+3291 #   vectors:
+3292 #     .long vector0
+3293 #     .long vector1
+3294 #     .long vector2
+3295 #   ...
+3296 
+3297 
+3298 
+3299 
+3300 
+3301 
+3302   
+3303 .globl alltraps
+3304 alltraps:
+3305   
+3306   pushl %ds
+3307   pushl %es
+3308   pushl %fs
+3309   pushl %gs
+3310   pushal
+3311 
+3312   
+3313   movw $(SEG_KDATA<<3), %ax
+3314   movw %ax, %ds
+3315   movw %ax, %es
+3316 
+3317   
+3318   pushl %esp
+3319   call trap
+3320   addl $4, %esp
+3321 
+3322   
+3323 .globl trapret
+3324 trapret:
+3325   popal
+3326   popl %gs
+3327   popl %fs
+3328   popl %es
+3329   popl %ds
+3330   addl $0x8, %esp  
+3331   iret
+3332 
+3333 
+3334 
+3335 
+3336 
+3337 
+3338 
+3339 
+3340 
+3341 
+3342 
+3343 
+3344 
+3345 
+3346 
+3347 
+3348 
+3349 
+3350 #include "types.h"
+3351 #include "defs.h"
+3352 #include "param.h"
+3353 #include "memlayout.h"
+3354 #include "mmu.h"
+3355 #include "proc.h"
+3356 #include "x86.h"
+3357 #include "traps.h"
+3358 #include "spinlock.h"
+3359 
+3360 
+3361 struct gatedesc idt[256];
+3362 extern uint vectors[];  
+3363 struct spinlock tickslock;
+3364 uint ticks;
+3365 
+3366 void
+3367 tvinit(void)
+3368 {
+3369   int i;
+3370 
+3371   for(i = 0; i < 256; i++)
+3372     SETGATE(idt[i], 0, SEG_KCODE<<3, vectors[i], 0);
+3373   SETGATE(idt[T_SYSCALL], 1, SEG_KCODE<<3, vectors[T_SYSCALL], DPL_USER);
+3374 
+3375   initlock(&tickslock, "time");
+3376 }
+3377 
+3378 void
+3379 idtinit(void)
+3380 {
+3381   lidt(idt, sizeof(idt));
+3382 }
+3383 
+3384 
+3385 
+3386 
+3387 
+3388 
+3389 
+3390 
+3391 
+3392 
+3393 
+3394 
+3395 
+3396 
+3397 
+3398 
+3399 
+3400 void
+3401 trap(struct trapframe *tf)
+3402 {
+3403   if(tf->trapno == T_SYSCALL){
+3404     if(myproc()->killed)
+3405       exit();
+3406     myproc()->tf = tf;
+3407     syscall();
+3408     if(myproc()->killed)
+3409       exit();
+3410     return;
+3411   }
+3412 
+3413   switch(tf->trapno){
+3414   case T_IRQ0 + IRQ_TIMER:
+3415     if(cpuid() == 0){
+3416       acquire(&tickslock);
+3417       ticks++;
+3418       wakeup(&ticks);
+3419       release(&tickslock);
+3420     }
+3421     lapiceoi();
+3422     break;
+3423   case T_IRQ0 + IRQ_IDE:
+3424     ideintr();
+3425     lapiceoi();
+3426     break;
+3427   case T_IRQ0 + IRQ_IDE+1:
+3428     
+3429     break;
+3430   case T_IRQ0 + IRQ_KBD:
+3431     kbdintr();
+3432     lapiceoi();
+3433     break;
+3434   case T_IRQ0 + IRQ_COM1:
+3435     uartintr();
+3436     lapiceoi();
+3437     break;
+3438   case T_IRQ0 + 7:
+3439   case T_IRQ0 + IRQ_SPURIOUS:
+3440     cprintf("cpu%d: spurious interrupt at %x:%x\n",
+3441             cpuid(), tf->cs, tf->eip);
+3442     lapiceoi();
+3443     break;
+3444 
+3445 
+3446 
+3447 
+3448 
+3449 
+3450   default:
+3451     if(myproc() == 0 || (tf->cs&3) == 0){
+3452       
+3453       cprintf("unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n",
+3454               tf->trapno, cpuid(), tf->eip, rcr2());
+3455       panic("trap");
+3456     }
+3457     
+3458     cprintf("pid %d %s: trap %d err %d on cpu %d "
+3459             "eip 0x%x addr 0x%x--kill proc\n",
+3460             myproc()->pid, myproc()->name, tf->trapno,
+3461             tf->err, cpuid(), tf->eip, rcr2());
+3462     myproc()->killed = 1;
+3463   }
+3464 
+3465   
+3466   
+3467   
+3468   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
+3469     exit();
+3470 
+3471   
+3472   
+3473   if(myproc() && myproc()->state == RUNNING &&
+3474      tf->trapno == T_IRQ0+IRQ_TIMER)
+3475     yield();
+3476 
+3477   
+3478   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
+3479     exit();
+3480 }
+3481 
+3482 
+3483 
+3484 
+3485 
+3486 
+3487 
+3488 
+3489 
+3490 
+3491 
+3492 
+3493 
+3494 
+3495 
+3496 
+3497 
+3498 
+3499 
+3500 
+3501 #define SYS_fork    1
+3502 #define SYS_exit    2
+3503 #define SYS_wait    3
+3504 #define SYS_pipe    4
+3505 #define SYS_read    5
+3506 #define SYS_kill    6
+3507 #define SYS_exec    7
+3508 #define SYS_fstat   8
+3509 #define SYS_chdir   9
+3510 #define SYS_dup    10
+3511 #define SYS_getpid 11
+3512 #define SYS_sbrk   12
+3513 #define SYS_sleep  13
+3514 #define SYS_uptime 14
+3515 #define SYS_open   15
+3516 #define SYS_write  16
+3517 #define SYS_mknod  17
+3518 #define SYS_unlink 18
+3519 #define SYS_link   19
+3520 #define SYS_mkdir  20
+3521 #define SYS_close  21
+3522 
+3523 
+3524 
+3525 
+3526 
+3527 
+3528 
+3529 
+3530 
+3531 
+3532 
+3533 
+3534 
+3535 
+3536 
+3537 
+3538 
+3539 
+3540 
+3541 
+3542 
+3543 
+3544 
+3545 
+3546 
+3547 
+3548 
+3549 
+3550 #include "types.h"
+3551 #include "defs.h"
+3552 #include "param.h"
+3553 #include "memlayout.h"
+3554 #include "mmu.h"
+3555 #include "proc.h"
+3556 #include "x86.h"
+3557 #include "syscall.h"
+3558 
+3559 
+3560 
+3561 
+3562 
+3563 
+3564 
+3565 
+3566 int
+3567 fetchint(uint addr, int *ip)
+3568 {
+3569   struct proc *curproc = myproc();
+3570 
+3571   if(addr >= curproc->sz || addr+4 > curproc->sz)
+3572     return -1;
+3573   *ip = *(int*)(addr);
+3574   return 0;
+3575 }
+3576 
+3577 
+3578 
+3579 
+3580 int
+3581 fetchstr(uint addr, char **pp)
+3582 {
+3583   char *s, *ep;
+3584   struct proc *curproc = myproc();
+3585 
+3586   if(addr >= curproc->sz)
+3587     return -1;
+3588   *pp = (char*)addr;
+3589   ep = (char*)curproc->sz;
+3590   for(s = *pp; s < ep; s++){
+3591     if(*s == 0)
+3592       return s - *pp;
+3593   }
+3594   return -1;
+3595 }
+3596 
+3597 
+3598 
+3599 
+3600 
+3601 int
+3602 argint(int n, int *ip)
+3603 {
+3604   return fetchint((myproc()->tf->esp) + 4 + 4*n, ip);
+3605 }
+3606 
+3607 
+3608 
+3609 
+3610 int
+3611 argptr(int n, char **pp, int size)
+3612 {
+3613   int i;
+3614   struct proc *curproc = myproc();
+3615 
+3616   if(argint(n, &i) < 0)
+3617     return -1;
+3618   if(size < 0 || (uint)i >= curproc->sz || (uint)i+size > curproc->sz)
+3619     return -1;
+3620   *pp = (char*)i;
+3621   return 0;
+3622 }
+3623 
+3624 
+3625 
+3626 
+3627 
+3628 int
+3629 argstr(int n, char **pp)
+3630 {
+3631   int addr;
+3632   if(argint(n, &addr) < 0)
+3633     return -1;
+3634   return fetchstr(addr, pp);
+3635 }
+3636 
+3637 
+3638 
+3639 
+3640 
+3641 
+3642 
+3643 
+3644 
+3645 
+3646 
+3647 
+3648 
+3649 
+3650 extern int sys_chdir(void);
+3651 extern int sys_close(void);
+3652 extern int sys_dup(void);
+3653 extern int sys_exec(void);
+3654 extern int sys_exit(void);
+3655 extern int sys_fork(void);
+3656 extern int sys_fstat(void);
+3657 extern int sys_getpid(void);
+3658 extern int sys_kill(void);
+3659 extern int sys_link(void);
+3660 extern int sys_mkdir(void);
+3661 extern int sys_mknod(void);
+3662 extern int sys_open(void);
+3663 extern int sys_pipe(void);
+3664 extern int sys_read(void);
+3665 extern int sys_sbrk(void);
+3666 extern int sys_sleep(void);
+3667 extern int sys_unlink(void);
+3668 extern int sys_wait(void);
+3669 extern int sys_write(void);
+3670 extern int sys_uptime(void);
+3671 
+3672 static int (*syscalls[])(void) = {
+3673 [SYS_fork]    sys_fork,
+3674 [SYS_exit]    sys_exit,
+3675 [SYS_wait]    sys_wait,
+3676 [SYS_pipe]    sys_pipe,
+3677 [SYS_read]    sys_read,
+3678 [SYS_kill]    sys_kill,
+3679 [SYS_exec]    sys_exec,
+3680 [SYS_fstat]   sys_fstat,
+3681 [SYS_chdir]   sys_chdir,
+3682 [SYS_dup]     sys_dup,
+3683 [SYS_getpid]  sys_getpid,
+3684 [SYS_sbrk]    sys_sbrk,
+3685 [SYS_sleep]   sys_sleep,
+3686 [SYS_uptime]  sys_uptime,
+3687 [SYS_open]    sys_open,
+3688 [SYS_write]   sys_write,
+3689 [SYS_mknod]   sys_mknod,
+3690 [SYS_unlink]  sys_unlink,
+3691 [SYS_link]    sys_link,
+3692 [SYS_mkdir]   sys_mkdir,
+3693 [SYS_close]   sys_close,
+3694 };
+3695 
+3696 
+3697 
+3698 
+3699 
+3700 void
+3701 syscall(void)
+3702 {
+3703   int num;
+3704   struct proc *curproc = myproc();
+3705 
+3706   num = curproc->tf->eax;
+3707   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+3708     curproc->tf->eax = syscalls[num]();
+3709   } else {
+3710     cprintf("%d %s: unknown sys call %d\n",
+3711             curproc->pid, curproc->name, num);
+3712     curproc->tf->eax = -1;
+3713   }
+3714 }
+3715 
+3716 
+3717 
+3718 
+3719 
+3720 
+3721 
+3722 
+3723 
+3724 
+3725 
+3726 
+3727 
+3728 
+3729 
+3730 
+3731 
+3732 
+3733 
+3734 
+3735 
+3736 
+3737 
+3738 
+3739 
+3740 
+3741 
+3742 
+3743 
+3744 
+3745 
+3746 
+3747 
+3748 
+3749 
+3750 #include "types.h"
+3751 #include "x86.h"
+3752 #include "defs.h"
+3753 #include "date.h"
+3754 #include "param.h"
+3755 #include "memlayout.h"
+3756 #include "mmu.h"
+3757 #include "proc.h"
+3758 
+3759 int
+3760 sys_fork(void)
+3761 {
+3762   return fork();
+3763 }
+3764 
+3765 int
+3766 sys_exit(void)
+3767 {
+3768   exit();
+3769   return 0;  
+3770 }
+3771 
+3772 int
+3773 sys_wait(void)
+3774 {
+3775   return wait();
+3776 }
+3777 
+3778 int
+3779 sys_kill(void)
+3780 {
+3781   int pid;
+3782 
+3783   if(argint(0, &pid) < 0)
+3784     return -1;
+3785   return kill(pid);
+3786 }
+3787 
+3788 int
+3789 sys_getpid(void)
+3790 {
+3791   return myproc()->pid;
+3792 }
+3793 
+3794 
+3795 
+3796 
+3797 
+3798 
+3799 
+3800 int
+3801 sys_sbrk(void)
+3802 {
+3803   int addr;
+3804   int n;
+3805 
+3806   if(argint(0, &n) < 0)
+3807     return -1;
+3808   addr = myproc()->sz;
+3809   if(growproc(n) < 0)
+3810     return -1;
+3811   return addr;
+3812 }
+3813 
+3814 int
+3815 sys_sleep(void)
+3816 {
+3817   int n;
+3818   uint ticks0;
+3819 
+3820   if(argint(0, &n) < 0)
+3821     return -1;
+3822   acquire(&tickslock);
+3823   ticks0 = ticks;
+3824   while(ticks - ticks0 < n){
+3825     if(myproc()->killed){
+3826       release(&tickslock);
+3827       return -1;
+3828     }
+3829     sleep(&ticks, &tickslock);
+3830   }
+3831   release(&tickslock);
+3832   return 0;
+3833 }
+3834 
+3835 
+3836 
+3837 int
+3838 sys_uptime(void)
+3839 {
+3840   uint xticks;
+3841 
+3842   acquire(&tickslock);
+3843   xticks = ticks;
+3844   release(&tickslock);
+3845   return xticks;
+3846 }
+3847 
+3848 
+3849 
+3850 struct buf {
+3851   int flags;
+3852   uint dev;
+3853   uint blockno;
+3854   struct sleeplock lock;
+3855   uint refcnt;
+3856   struct buf *prev; 
+3857   struct buf *next;
+3858   struct buf *qnext; 
+3859   uchar data[BSIZE];
+3860 };
+3861 #define B_VALID 0x2  
+3862 #define B_DIRTY 0x4  
+3863 
+3864 
+3865 
+3866 
+3867 
+3868 
+3869 
+3870 
+3871 
+3872 
+3873 
+3874 
+3875 
+3876 
+3877 
+3878 
+3879 
+3880 
+3881 
+3882 
+3883 
+3884 
+3885 
+3886 
+3887 
+3888 
+3889 
+3890 
+3891 
+3892 
+3893 
+3894 
+3895 
+3896 
+3897 
+3898 
+3899 
+3900 
+3901 struct sleeplock {
+3902   uint locked;       
+3903   struct spinlock lk; 
+3904 
+3905   
+3906   char *name;        
+3907   int pid;           
+3908 };
+3909 
+3910 
+3911 
+3912 
+3913 
+3914 
+3915 
+3916 
+3917 
+3918 
+3919 
+3920 
+3921 
+3922 
+3923 
+3924 
+3925 
+3926 
+3927 
+3928 
+3929 
+3930 
+3931 
+3932 
+3933 
+3934 
+3935 
+3936 
+3937 
+3938 
+3939 
+3940 
+3941 
+3942 
+3943 
+3944 
+3945 
+3946 
+3947 
+3948 
+3949 
+3950 #define O_RDONLY  0x000
+3951 #define O_WRONLY  0x001
+3952 #define O_RDWR    0x002
+3953 #define O_CREATE  0x200
+3954 
+3955 
+3956 
+3957 
+3958 
+3959 
+3960 
+3961 
+3962 
+3963 
+3964 
+3965 
+3966 
+3967 
+3968 
+3969 
+3970 
+3971 
+3972 
+3973 
+3974 
+3975 
+3976 
+3977 
+3978 
+3979 
+3980 
+3981 
+3982 
+3983 
+3984 
+3985 
+3986 
+3987 
+3988 
+3989 
+3990 
+3991 
+3992 
+3993 
+3994 
+3995 
+3996 
+3997 
+3998 
+3999 
+4000 #define T_DIR  1   
+4001 #define T_FILE 2   
+4002 #define T_DEV  3   
+4003 
+4004 struct stat {
+4005   short type;  
+4006   int dev;     
+4007   uint ino;    
+4008   short nlink; 
+4009   uint size;   
+4010 };
+4011 
+4012 
+4013 
+4014 
+4015 
+4016 
+4017 
+4018 
+4019 
+4020 
+4021 
+4022 
+4023 
+4024 
+4025 
+4026 
+4027 
+4028 
+4029 
+4030 
+4031 
+4032 
+4033 
+4034 
+4035 
+4036 
+4037 
+4038 
+4039 
+4040 
+4041 
+4042 
+4043 
+4044 
+4045 
+4046 
+4047 
+4048 
+4049 
+4050 
+4051 
+4052 
+4053 
+4054 #define ROOTINO 1  
+4055 #define BSIZE 512  
+4056 
+4057 
+4058 
+4059 
+4060 
+4061 
+4062 
+4063 struct superblock {
+4064   uint size;         
+4065   uint nblocks;      
+4066   uint ninodes;      
+4067   uint nlog;         
+4068   uint logstart;     
+4069   uint inodestart;   
+4070   uint bmapstart;    
+4071 };
+4072 
+4073 #define NDIRECT 12
+4074 #define NINDIRECT (BSIZE / sizeof(uint))
+4075 #define MAXFILE (NDIRECT + NINDIRECT)
+4076 
+4077 
+4078 struct dinode {
+4079   short type;           
+4080   short major;          
+4081   short minor;          
+4082   short nlink;          
+4083   uint size;            
+4084   uint addrs[NDIRECT+1];   
+4085 };
+4086 
+4087 
+4088 
+4089 
+4090 
+4091 
+4092 
+4093 
+4094 
+4095 
+4096 
+4097 
+4098 
+4099 
+4100 
+4101 #define IPB           (BSIZE / sizeof(struct dinode))
+4102 
+4103 
+4104 #define IBLOCK(i, sb)     ((i) / IPB + sb.inodestart)
+4105 
+4106 
+4107 #define BPB           (BSIZE*8)
+4108 
+4109 
+4110 #define BBLOCK(b, sb) (b/BPB + sb.bmapstart)
+4111 
+4112 
+4113 #define DIRSIZ 14
+4114 
+4115 struct dirent {
+4116   ushort inum;
+4117   char name[DIRSIZ];
+4118 };
+4119 
+4120 
+4121 
+4122 
+4123 
+4124 
+4125 
+4126 
+4127 
+4128 
+4129 
+4130 
+4131 
+4132 
+4133 
+4134 
+4135 
+4136 
+4137 
+4138 
+4139 
+4140 
+4141 
+4142 
+4143 
+4144 
+4145 
+4146 
+4147 
+4148 
+4149 
+4150 struct file {
+4151   enum { FD_NONE, FD_PIPE, FD_INODE } type;
+4152   int ref; 
+4153   char readable;
+4154   char writable;
+4155   struct pipe *pipe;
+4156   struct inode *ip;
+4157   uint off;
+4158 };
+4159 
+4160 
+4161 
+4162 struct inode {
+4163   uint dev;           
+4164   uint inum;          
+4165   int ref;            
+4166   struct sleeplock lock; 
+4167   int valid;          
+4168 
+4169   short type;         
+4170   short major;
+4171   short minor;
+4172   short nlink;
+4173   uint size;
+4174   uint addrs[NDIRECT+1];
+4175 };
+4176 
+4177 
+4178 
+4179 struct devsw {
+4180   int (*read)(struct inode*, char*, int);
+4181   int (*write)(struct inode*, char*, int);
+4182 };
+4183 
+4184 extern struct devsw devsw[];
+4185 
+4186 #define CONSOLE 1
+4187 
+4188 
+4189 
+4190 
+4191 
+4192 
+4193 
+4194 
+4195 
+4196 
+4197 
+4198 
+4199 
+4200 
+4201 
+4202 #include "types.h"
+4203 #include "defs.h"
+4204 #include "param.h"
+4205 #include "memlayout.h"
+4206 #include "mmu.h"
+4207 #include "proc.h"
+4208 #include "x86.h"
+4209 #include "traps.h"
+4210 #include "spinlock.h"
+4211 #include "sleeplock.h"
+4212 #include "fs.h"
+4213 #include "buf.h"
+4214 
+4215 #define SECTOR_SIZE   512
+4216 #define IDE_BSY       0x80
+4217 #define IDE_DRDY      0x40
+4218 #define IDE_DF        0x20
+4219 #define IDE_ERR       0x01
+4220 
+4221 #define IDE_CMD_READ  0x20
+4222 #define IDE_CMD_WRITE 0x30
+4223 #define IDE_CMD_RDMUL 0xc4
+4224 #define IDE_CMD_WRMUL 0xc5
+4225 
+4226 
+4227 
+4228 
+4229 
+4230 static struct spinlock idelock;
+4231 static struct buf *idequeue;
+4232 
+4233 static int havedisk1;
+4234 static void idestart(struct buf*);
+4235 
+4236 
+4237 static int
+4238 idewait(int checkerr)
+4239 {
+4240   int r;
+4241 
+4242   while(((r = inb(0x1f7)) & (IDE_BSY|IDE_DRDY)) != IDE_DRDY)
+4243     ;
+4244   if(checkerr && (r & (IDE_DF|IDE_ERR)) != 0)
+4245     return -1;
+4246   return 0;
+4247 }
+4248 
+4249 
+4250 void
+4251 ideinit(void)
+4252 {
+4253   int i;
+4254 
+4255   initlock(&idelock, "ide");
+4256   ioapicenable(IRQ_IDE, ncpu - 1);
+4257   idewait(0);
+4258 
+4259   
+4260   outb(0x1f6, 0xe0 | (1<<4));
+4261   for(i=0; i<1000; i++){
+4262     if(inb(0x1f7) != 0){
+4263       havedisk1 = 1;
+4264       break;
+4265     }
+4266   }
+4267 
+4268   
+4269   outb(0x1f6, 0xe0 | (0<<4));
+4270 }
+4271 
+4272 
+4273 static void
+4274 idestart(struct buf *b)
+4275 {
+4276   if(b == 0)
+4277     panic("idestart");
+4278   if(b->blockno >= FSSIZE)
+4279     panic("incorrect blockno");
+4280   int sector_per_block =  BSIZE/SECTOR_SIZE;
+4281   int sector = b->blockno * sector_per_block;
+4282   int read_cmd = (sector_per_block == 1) ? IDE_CMD_READ :  IDE_CMD_RDMUL;
+4283   int write_cmd = (sector_per_block == 1) ? IDE_CMD_WRITE : IDE_CMD_WRMUL;
+4284 
+4285   if (sector_per_block > 7) panic("idestart");
+4286 
+4287   idewait(0);
+4288   outb(0x3f6, 0);  
+4289   outb(0x1f2, sector_per_block);  
+4290   outb(0x1f3, sector & 0xff);
+4291   outb(0x1f4, (sector >> 8) & 0xff);
+4292   outb(0x1f5, (sector >> 16) & 0xff);
+4293   outb(0x1f6, 0xe0 | ((b->dev&1)<<4) | ((sector>>24)&0x0f));
+4294   if(b->flags & B_DIRTY){
+4295     outb(0x1f7, write_cmd);
+4296     outsl(0x1f0, b->data, BSIZE/4);
+4297   } else {
+4298     outb(0x1f7, read_cmd);
+4299   }
+4300 }
+4301 
+4302 
+4303 void
+4304 ideintr(void)
+4305 {
+4306   struct buf *b;
+4307 
+4308   
+4309   acquire(&idelock);
+4310 
+4311   if((b = idequeue) == 0){
+4312     release(&idelock);
+4313     return;
+4314   }
+4315   idequeue = b->qnext;
+4316 
+4317   
+4318   if(!(b->flags & B_DIRTY) && idewait(1) >= 0)
+4319     insl(0x1f0, b->data, BSIZE/4);
+4320 
+4321   
+4322   b->flags |= B_VALID;
+4323   b->flags &= ~B_DIRTY;
+4324   wakeup(b);
+4325 
+4326   
+4327   if(idequeue != 0)
+4328     idestart(idequeue);
+4329 
+4330   release(&idelock);
+4331 }
+4332 
+4333 
+4334 
+4335 
+4336 
+4337 
+4338 
+4339 
+4340 
+4341 
+4342 
+4343 
+4344 
+4345 
+4346 
+4347 
+4348 
+4349 
+4350 
+4351 
+4352 
+4353 void
+4354 iderw(struct buf *b)
+4355 {
+4356   struct buf **pp;
+4357 
+4358   if(!holdingsleep(&b->lock))
+4359     panic("iderw: buf not locked");
+4360   if((b->flags & (B_VALID|B_DIRTY)) == B_VALID)
+4361     panic("iderw: nothing to do");
+4362   if(b->dev != 0 && !havedisk1)
+4363     panic("iderw: ide disk 1 not present");
+4364 
+4365   acquire(&idelock);  
+4366 
+4367   
+4368   b->qnext = 0;
+4369   for(pp=&idequeue; *pp; pp=&(*pp)->qnext)  
+4370     ;
+4371   *pp = b;
+4372 
+4373   
+4374   if(idequeue == b)
+4375     idestart(b);
+4376 
+4377   
+4378   while((b->flags & (B_VALID|B_DIRTY)) != B_VALID){
+4379     sleep(b, &idelock);
+4380   }
+4381 
+4382 
+4383   release(&idelock);
+4384 }
+4385 
+4386 
+4387 
+4388 
+4389 
+4390 
+4391 
+4392 
+4393 
+4394 
+4395 
+4396 
+4397 
+4398 
+4399 
+4400 
+4401 
+4402 
+4403 
+4404 
+4405 
+4406 
+4407 
+4408 
+4409 
+4410 
+4411 
+4412 
+4413 
+4414 
+4415 
+4416 
+4417 
+4418 
+4419 
+4420 #include "types.h"
+4421 #include "defs.h"
+4422 #include "param.h"
+4423 #include "spinlock.h"
+4424 #include "sleeplock.h"
+4425 #include "fs.h"
+4426 #include "buf.h"
+4427 
+4428 struct {
+4429   struct spinlock lock;
+4430   struct buf buf[NBUF];
+4431 
+4432   
+4433   
+4434   struct buf head;
+4435 } bcache;
+4436 
+4437 void
+4438 binit(void)
+4439 {
+4440   struct buf *b;
+4441 
+4442   initlock(&bcache.lock, "bcache");
+4443 
+4444 
+4445 
+4446 
+4447 
+4448 
+4449 
+4450   
+4451   bcache.head.prev = &bcache.head;
+4452   bcache.head.next = &bcache.head;
+4453   for(b = bcache.buf; b < bcache.buf+NBUF; b++){
+4454     b->next = bcache.head.next;
+4455     b->prev = &bcache.head;
+4456     initsleeplock(&b->lock, "buffer");
+4457     bcache.head.next->prev = b;
+4458     bcache.head.next = b;
+4459   }
+4460 }
+4461 
+4462 
+4463 
+4464 
+4465 static struct buf*
+4466 bget(uint dev, uint blockno)
+4467 {
+4468   struct buf *b;
+4469 
+4470   acquire(&bcache.lock);
+4471 
+4472   
+4473   for(b = bcache.head.next; b != &bcache.head; b = b->next){
+4474     if(b->dev == dev && b->blockno == blockno){
+4475       b->refcnt++;
+4476       release(&bcache.lock);
+4477       acquiresleep(&b->lock);
+4478       return b;
+4479     }
+4480   }
+4481 
+4482   
+4483   
+4484   
+4485   for(b = bcache.head.prev; b != &bcache.head; b = b->prev){
+4486     if(b->refcnt == 0 && (b->flags & B_DIRTY) == 0) {
+4487       b->dev = dev;
+4488       b->blockno = blockno;
+4489       b->flags = 0;
+4490       b->refcnt = 1;
+4491       release(&bcache.lock);
+4492       acquiresleep(&b->lock);
+4493       return b;
+4494     }
+4495   }
+4496   panic("bget: no buffers");
+4497 }
+4498 
+4499 
+4500 
+4501 struct buf*
+4502 bread(uint dev, uint blockno)
+4503 {
+4504   struct buf *b;
+4505 
+4506   b = bget(dev, blockno);
+4507   if((b->flags & B_VALID) == 0) {
+4508     iderw(b);
+4509   }
+4510   return b;
+4511 }
+4512 
+4513 
+4514 void
+4515 bwrite(struct buf *b)
+4516 {
+4517   if(!holdingsleep(&b->lock))
+4518     panic("bwrite");
+4519   b->flags |= B_DIRTY;
+4520   iderw(b);
+4521 }
+4522 
+4523 
+4524 
+4525 void
+4526 brelse(struct buf *b)
+4527 {
+4528   if(!holdingsleep(&b->lock))
+4529     panic("brelse");
+4530 
+4531   releasesleep(&b->lock);
+4532 
+4533   acquire(&bcache.lock);
+4534   b->refcnt--;
+4535   if (b->refcnt == 0) {
+4536     
+4537     b->next->prev = b->prev;
+4538     b->prev->next = b->next;
+4539     b->next = bcache.head.next;
+4540     b->prev = &bcache.head;
+4541     bcache.head.next->prev = b;
+4542     bcache.head.next = b;
+4543   }
+4544 
+4545   release(&bcache.lock);
+4546 }
+4547 
+4548 
+4549 
+4550 
+4551 
+4552 
+4553 
+4554 
+4555 
+4556 
+4557 
+4558 
+4559 
+4560 
+4561 
+4562 
+4563 
+4564 
+4565 
+4566 
+4567 
+4568 
+4569 
+4570 
+4571 
+4572 
+4573 
+4574 
+4575 
+4576 
+4577 
+4578 
+4579 
+4580 
+4581 
+4582 
+4583 
+4584 
+4585 
+4586 
+4587 
+4588 
+4589 
+4590 
+4591 
+4592 
+4593 
+4594 
+4595 
+4596 
+4597 
+4598 
+4599 
+4600 
+4601 
+4602 #include "types.h"
+4603 #include "defs.h"
+4604 #include "param.h"
+4605 #include "x86.h"
+4606 #include "memlayout.h"
+4607 #include "mmu.h"
+4608 #include "proc.h"
+4609 #include "spinlock.h"
+4610 #include "sleeplock.h"
+4611 
+4612 void
+4613 initsleeplock(struct sleeplock *lk, char *name)
+4614 {
+4615   initlock(&lk->lk, "sleep lock");
+4616   lk->name = name;
+4617   lk->locked = 0;
+4618   lk->pid = 0;
+4619 }
+4620 
+4621 void
+4622 acquiresleep(struct sleeplock *lk)
+4623 {
+4624   acquire(&lk->lk);
+4625   while (lk->locked) {
+4626     sleep(lk, &lk->lk);
+4627   }
+4628   lk->locked = 1;
+4629   lk->pid = myproc()->pid;
+4630   release(&lk->lk);
+4631 }
+4632 
+4633 void
+4634 releasesleep(struct sleeplock *lk)
+4635 {
+4636   acquire(&lk->lk);
+4637   lk->locked = 0;
+4638   lk->pid = 0;
+4639   wakeup(lk);
+4640   release(&lk->lk);
+4641 }
+4642 
+4643 
+4644 
+4645 
+4646 
+4647 
+4648 
+4649 
+4650 int
+4651 holdingsleep(struct sleeplock *lk)
+4652 {
+4653   int r;
+4654 
+4655   acquire(&lk->lk);
+4656   r = lk->locked && (lk->pid == myproc()->pid);
+4657   release(&lk->lk);
+4658   return r;
+4659 }
+4660 
+4661 
+4662 
+4663 
+4664 
+4665 
+4666 
+4667 
+4668 
+4669 
+4670 
+4671 
+4672 
+4673 
+4674 
+4675 
+4676 
+4677 
+4678 
+4679 
+4680 
+4681 
+4682 
+4683 
+4684 
+4685 
+4686 
+4687 
+4688 
+4689 
+4690 
+4691 
+4692 
+4693 
+4694 
+4695 
+4696 
+4697 
+4698 
+4699 
+4700 #include "types.h"
+4701 #include "defs.h"
+4702 #include "param.h"
+4703 #include "spinlock.h"
+4704 #include "sleeplock.h"
+4705 #include "fs.h"
+4706 #include "buf.h"
+4707 
+4708 
+4709 
+4710 
+4711 
+4712 
+4713 
+4714 
+4715 
+4716 
+4717 
+4718 
+4719 
+4720 
+4721 
+4722 
+4723 
+4724 
+4725 
+4726 
+4727 
+4728 
+4729 
+4730 
+4731 
+4732 
+4733 struct logheader {
+4734   int n;
+4735   int block[LOGSIZE];
+4736 };
+4737 
+4738 struct log {
+4739   struct spinlock lock;
+4740   int start;
+4741   int size;
+4742   int outstanding; 
+4743   int committing;  
+4744   int dev;
+4745   struct logheader lh;
+4746 };
+4747 
+4748 
+4749 
+4750 struct log log;
+4751 
+4752 static void recover_from_log(void);
+4753 static void commit();
+4754 
+4755 void
+4756 initlog(int dev)
+4757 {
+4758   if (sizeof(struct logheader) >= BSIZE)
+4759     panic("initlog: too big logheader");
+4760 
+4761   struct superblock sb;
+4762   initlock(&log.lock, "log");
+4763   readsb(dev, &sb);
+4764   log.start = sb.logstart;
+4765   log.size = sb.nlog;
+4766   log.dev = dev;
+4767   recover_from_log();
+4768 }
+4769 
+4770 
+4771 static void
+4772 install_trans(void)
+4773 {
+4774   int tail;
+4775 
+4776   for (tail = 0; tail < log.lh.n; tail++) {
+4777     struct buf *lbuf = bread(log.dev, log.start+tail+1); 
+4778     struct buf *dbuf = bread(log.dev, log.lh.block[tail]); 
+4779     memmove(dbuf->data, lbuf->data, BSIZE);  
+4780     bwrite(dbuf);  
+4781     brelse(lbuf);
+4782     brelse(dbuf);
+4783   }
+4784 }
+4785 
+4786 
+4787 static void
+4788 read_head(void)
+4789 {
+4790   struct buf *buf = bread(log.dev, log.start);
+4791   struct logheader *lh = (struct logheader *) (buf->data);
+4792   int i;
+4793   log.lh.n = lh->n;
+4794   for (i = 0; i < log.lh.n; i++) {
+4795     log.lh.block[i] = lh->block[i];
+4796   }
+4797   brelse(buf);
+4798 }
+4799 
+4800 
+4801 
+4802 
+4803 static void
+4804 write_head(void)
+4805 {
+4806   struct buf *buf = bread(log.dev, log.start);
+4807   struct logheader *hb = (struct logheader *) (buf->data);
+4808   int i;
+4809   hb->n = log.lh.n;
+4810   for (i = 0; i < log.lh.n; i++) {
+4811     hb->block[i] = log.lh.block[i];
+4812   }
+4813   bwrite(buf);
+4814   brelse(buf);
+4815 }
+4816 
+4817 static void
+4818 recover_from_log(void)
+4819 {
+4820   read_head();
+4821   install_trans(); 
+4822   log.lh.n = 0;
+4823   write_head(); 
+4824 }
+4825 
+4826 
+4827 void
+4828 begin_op(void)
+4829 {
+4830   acquire(&log.lock);
+4831   while(1){
+4832     if(log.committing){
+4833       sleep(&log, &log.lock);
+4834     } else if(log.lh.n + (log.outstanding+1)*MAXOPBLOCKS > LOGSIZE){
+4835       
+4836       sleep(&log, &log.lock);
+4837     } else {
+4838       log.outstanding += 1;
+4839       release(&log.lock);
+4840       break;
+4841     }
+4842   }
+4843 }
+4844 
+4845 
+4846 
+4847 
+4848 
+4849 
+4850 
+4851 
+4852 void
+4853 end_op(void)
+4854 {
+4855   int do_commit = 0;
+4856 
+4857   acquire(&log.lock);
+4858   log.outstanding -= 1;
+4859   if(log.committing)
+4860     panic("log.committing");
+4861   if(log.outstanding == 0){
+4862     do_commit = 1;
+4863     log.committing = 1;
+4864   } else {
+4865     
+4866     
+4867     
+4868     wakeup(&log);
+4869   }
+4870   release(&log.lock);
+4871 
+4872   if(do_commit){
+4873     
+4874     
+4875     commit();
+4876     acquire(&log.lock);
+4877     log.committing = 0;
+4878     wakeup(&log);
+4879     release(&log.lock);
+4880   }
+4881 }
+4882 
+4883 
+4884 static void
+4885 write_log(void)
+4886 {
+4887   int tail;
+4888 
+4889   for (tail = 0; tail < log.lh.n; tail++) {
+4890     struct buf *to = bread(log.dev, log.start+tail+1); 
+4891     struct buf *from = bread(log.dev, log.lh.block[tail]); 
+4892     memmove(to->data, from->data, BSIZE);
+4893     bwrite(to);  
+4894     brelse(from);
+4895     brelse(to);
+4896   }
+4897 }
+4898 
+4899 
+4900 static void
+4901 commit()
+4902 {
+4903   if (log.lh.n > 0) {
+4904     write_log();     
+4905     write_head();    
+4906     install_trans(); 
+4907     log.lh.n = 0;
+4908     write_head();    
+4909   }
+4910 }
+4911 
+4912 
+4913 
+4914 
+4915 
+4916 
+4917 
+4918 
+4919 
+4920 
+4921 void
+4922 log_write(struct buf *b)
+4923 {
+4924   int i;
+4925 
+4926   if (log.lh.n >= LOGSIZE || log.lh.n >= log.size - 1)
+4927     panic("too big a transaction");
+4928   if (log.outstanding < 1)
+4929     panic("log_write outside of trans");
+4930 
+4931   acquire(&log.lock);
+4932   for (i = 0; i < log.lh.n; i++) {
+4933     if (log.lh.block[i] == b->blockno)   
+4934       break;
+4935   }
+4936   log.lh.block[i] = b->blockno;
+4937   if (i == log.lh.n)
+4938     log.lh.n++;
+4939   b->flags |= B_DIRTY; 
+4940   release(&log.lock);
+4941 }
+4942 
+4943 
+4944 
+4945 
+4946 
+4947 
+4948 
+4949 
+4950 
+4951 
+4952 
+4953 
+4954 
+4955 
+4956 
+4957 
+4958 
+4959 
+4960 
+4961 #include "types.h"
+4962 #include "defs.h"
+4963 #include "param.h"
+4964 #include "stat.h"
+4965 #include "mmu.h"
+4966 #include "proc.h"
+4967 #include "spinlock.h"
+4968 #include "sleeplock.h"
+4969 #include "fs.h"
+4970 #include "buf.h"
+4971 #include "file.h"
+4972 
+4973 #define min(a, b) ((a) < (b) ? (a) : (b))
+4974 static void itrunc(struct inode*);
+4975 
+4976 
+4977 struct superblock sb;
+4978 
+4979 
+4980 void
+4981 readsb(int dev, struct superblock *sb)
+4982 {
+4983   struct buf *bp;
+4984 
+4985   bp = bread(dev, 1);
+4986   memmove(sb, bp->data, sizeof(*sb));
+4987   brelse(bp);
+4988 }
+4989 
+4990 
+4991 
+4992 
+4993 
+4994 
+4995 
+4996 
+4997 
+4998 
+4999 
+5000 
+5001 static void
+5002 bzero(int dev, int bno)
+5003 {
+5004   struct buf *bp;
+5005 
+5006   bp = bread(dev, bno);
+5007   memset(bp->data, 0, BSIZE);
+5008   log_write(bp);
+5009   brelse(bp);
+5010 }
+5011 
+5012 
+5013 
+5014 
+5015 static uint
+5016 balloc(uint dev)
+5017 {
+5018   int b, bi, m;
+5019   struct buf *bp;
+5020 
+5021   bp = 0;
+5022   for(b = 0; b < sb.size; b += BPB){
+5023     bp = bread(dev, BBLOCK(b, sb));
+5024     for(bi = 0; bi < BPB && b + bi < sb.size; bi++){
+5025       m = 1 << (bi % 8);
+5026       if((bp->data[bi/8] & m) == 0){  
+5027         bp->data[bi/8] |= m;  
+5028         log_write(bp);
+5029         brelse(bp);
+5030         bzero(dev, b + bi);
+5031         return b + bi;
+5032       }
+5033     }
+5034     brelse(bp);
+5035   }
+5036   panic("balloc: out of blocks");
+5037 }
+5038 
+5039 
+5040 
+5041 
+5042 
+5043 
+5044 
+5045 
+5046 
+5047 
+5048 
+5049 
+5050 
+5051 static void
+5052 bfree(int dev, uint b)
+5053 {
+5054   struct buf *bp;
+5055   int bi, m;
+5056 
+5057   bp = bread(dev, BBLOCK(b, sb));
+5058   bi = b % BPB;
+5059   m = 1 << (bi % 8);
+5060   if((bp->data[bi/8] & m) == 0)
+5061     panic("freeing free block");
+5062   bp->data[bi/8] &= ~m;
+5063   log_write(bp);
+5064   brelse(bp);
+5065 }
+5066 
+5067 
+5068 
+5069 
+5070 
+5071 
+5072 
+5073 
+5074 
+5075 
+5076 
+5077 
+5078 
+5079 
+5080 
+5081 
+5082 
+5083 
+5084 
+5085 
+5086 
+5087 
+5088 
+5089 
+5090 
+5091 
+5092 
+5093 
+5094 
+5095 
+5096 
+5097 
+5098 
+5099 
+5100 
+5101 
+5102 
+5103 
+5104 
+5105 
+5106 
+5107 
+5108 
+5109 
+5110 
+5111 
+5112 
+5113 
+5114 
+5115 
+5116 
+5117 
+5118 
+5119 
+5120 
+5121 
+5122 
+5123 
+5124 
+5125 
+5126 
+5127 
+5128 
+5129 
+5130 
+5131 
+5132 
+5133 
+5134 
+5135 
+5136 struct {
+5137   struct spinlock lock;
+5138   struct inode inode[NINODE];
+5139 } icache;
+5140 
+5141 void
+5142 iinit(int dev)
+5143 {
+5144   int i = 0;
+5145 
+5146   initlock(&icache.lock, "icache");
+5147   for(i = 0; i < NINODE; i++) {
+5148     initsleeplock(&icache.inode[i].lock, "inode");
+5149   }
+5150   readsb(dev, &sb);
+5151   cprintf("sb: size %d nblocks %d ninodes %d nlog %d logstart %d\
+5152  inodestart %d bmap start %d\n", sb.size, sb.nblocks,
+5153           sb.ninodes, sb.nlog, sb.logstart, sb.inodestart,
+5154           sb.bmapstart);
+5155 }
+5156 
+5157 static struct inode* iget(uint dev, uint inum);
+5158 
+5159 
+5160 
+5161 
+5162 
+5163 
+5164 
+5165 
+5166 
+5167 
+5168 
+5169 
+5170 
+5171 
+5172 
+5173 
+5174 
+5175 
+5176 
+5177 
+5178 
+5179 
+5180 
+5181 
+5182 
+5183 
+5184 
+5185 
+5186 
+5187 
+5188 
+5189 
+5190 
+5191 
+5192 
+5193 
+5194 
+5195 
+5196 
+5197 
+5198 
+5199 
+5200 
+5201 
+5202 
+5203 struct inode*
+5204 ialloc(uint dev, short type)
+5205 {
+5206   int inum;
+5207   struct buf *bp;
+5208   struct dinode *dip;
+5209 
+5210   for(inum = 1; inum < sb.ninodes; inum++){
+5211     bp = bread(dev, IBLOCK(inum, sb));
+5212     dip = (struct dinode*)bp->data + inum%IPB;
+5213     if(dip->type == 0){  
+5214       memset(dip, 0, sizeof(*dip));
+5215       dip->type = type;
+5216       log_write(bp);   
+5217       brelse(bp);
+5218       return iget(dev, inum);
+5219     }
+5220     brelse(bp);
+5221   }
+5222   panic("ialloc: no inodes");
+5223 }
+5224 
+5225 
+5226 
+5227 
+5228 
+5229 void
+5230 iupdate(struct inode *ip)
+5231 {
+5232   struct buf *bp;
+5233   struct dinode *dip;
+5234 
+5235   bp = bread(ip->dev, IBLOCK(ip->inum, sb));
+5236   dip = (struct dinode*)bp->data + ip->inum%IPB;
+5237   dip->type = ip->type;
+5238   dip->major = ip->major;
+5239   dip->minor = ip->minor;
+5240   dip->nlink = ip->nlink;
+5241   dip->size = ip->size;
+5242   memmove(dip->addrs, ip->addrs, sizeof(ip->addrs));
+5243   log_write(bp);
+5244   brelse(bp);
+5245 }
+5246 
+5247 
+5248 
+5249 
+5250 
+5251 
+5252 
+5253 static struct inode*
+5254 iget(uint dev, uint inum)
+5255 {
+5256   struct inode *ip, *empty;
+5257 
+5258   acquire(&icache.lock);
+5259 
+5260   
+5261   empty = 0;
+5262   for(ip = &icache.inode[0]; ip < &icache.inode[NINODE]; ip++){
+5263     if(ip->ref > 0 && ip->dev == dev && ip->inum == inum){
+5264       ip->ref++;
+5265       release(&icache.lock);
+5266       return ip;
+5267     }
+5268     if(empty == 0 && ip->ref == 0)    
+5269       empty = ip;
+5270   }
+5271 
+5272   
+5273   if(empty == 0)
+5274     panic("iget: no inodes");
+5275 
+5276   ip = empty;
+5277   ip->dev = dev;
+5278   ip->inum = inum;
+5279   ip->ref = 1;
+5280   ip->valid = 0;
+5281   release(&icache.lock);
+5282 
+5283   return ip;
+5284 }
+5285 
+5286 
+5287 
+5288 struct inode*
+5289 idup(struct inode *ip)
+5290 {
+5291   acquire(&icache.lock);
+5292   ip->ref++;
+5293   release(&icache.lock);
+5294   return ip;
+5295 }
+5296 
+5297 
+5298 
+5299 
+5300 
+5301 
+5302 void
+5303 ilock(struct inode *ip)
+5304 {
+5305   struct buf *bp;
+5306   struct dinode *dip;
+5307 
+5308   if(ip == 0 || ip->ref < 1)
+5309     panic("ilock");
+5310 
+5311   acquiresleep(&ip->lock);
+5312 
+5313   if(ip->valid == 0){
+5314     bp = bread(ip->dev, IBLOCK(ip->inum, sb));
+5315     dip = (struct dinode*)bp->data + ip->inum%IPB;
+5316     ip->type = dip->type;
+5317     ip->major = dip->major;
+5318     ip->minor = dip->minor;
+5319     ip->nlink = dip->nlink;
+5320     ip->size = dip->size;
+5321     memmove(ip->addrs, dip->addrs, sizeof(ip->addrs));
+5322     brelse(bp);
+5323     ip->valid = 1;
+5324     if(ip->type == 0)
+5325       panic("ilock: no type");
+5326   }
+5327 }
+5328 
+5329 
+5330 void
+5331 iunlock(struct inode *ip)
+5332 {
+5333   if(ip == 0 || !holdingsleep(&ip->lock) || ip->ref < 1)
+5334     panic("iunlock");
+5335 
+5336   releasesleep(&ip->lock);
+5337 }
+5338 
+5339 
+5340 
+5341 
+5342 
+5343 
+5344 
+5345 
+5346 
+5347 
+5348 
+5349 
+5350 
+5351 
+5352 
+5353 
+5354 
+5355 
+5356 
+5357 void
+5358 iput(struct inode *ip)
+5359 {
+5360   acquiresleep(&ip->lock);
+5361   if(ip->valid && ip->nlink == 0){
+5362     acquire(&icache.lock);
+5363     int r = ip->ref;
+5364     release(&icache.lock);
+5365     if(r == 1){
+5366       
+5367       itrunc(ip);
+5368       ip->type = 0;
+5369       iupdate(ip);
+5370       ip->valid = 0;
+5371     }
+5372   }
+5373   releasesleep(&ip->lock);
+5374 
+5375   acquire(&icache.lock);
+5376   ip->ref--;
+5377   release(&icache.lock);
+5378 }
+5379 
+5380 
+5381 void
+5382 iunlockput(struct inode *ip)
+5383 {
+5384   iunlock(ip);
+5385   iput(ip);
+5386 }
+5387 
+5388 
+5389 
+5390 
+5391 
+5392 
+5393 
+5394 
+5395 
+5396 
+5397 
+5398 
+5399 
+5400 
+5401 
+5402 
+5403 
+5404 
+5405 
+5406 
+5407 
+5408 
+5409 static uint
+5410 bmap(struct inode *ip, uint bn)
+5411 {
+5412   uint addr, *a;
+5413   struct buf *bp;
+5414 
+5415   if(bn < NDIRECT){
+5416     if((addr = ip->addrs[bn]) == 0)
+5417       ip->addrs[bn] = addr = balloc(ip->dev);
+5418     return addr;
+5419   }
+5420   bn -= NDIRECT;
+5421 
+5422   if(bn < NINDIRECT){
+5423     
+5424     if((addr = ip->addrs[NDIRECT]) == 0)
+5425       ip->addrs[NDIRECT] = addr = balloc(ip->dev);
+5426     bp = bread(ip->dev, addr);
+5427     a = (uint*)bp->data;
+5428     if((addr = a[bn]) == 0){
+5429       a[bn] = addr = balloc(ip->dev);
+5430       log_write(bp);
+5431     }
+5432     brelse(bp);
+5433     return addr;
+5434   }
+5435 
+5436   panic("bmap: out of range");
+5437 }
+5438 
+5439 
+5440 
+5441 
+5442 
+5443 
+5444 
+5445 
+5446 
+5447 
+5448 
+5449 
+5450 
+5451 
+5452 
+5453 
+5454 
+5455 static void
+5456 itrunc(struct inode *ip)
+5457 {
+5458   int i, j;
+5459   struct buf *bp;
+5460   uint *a;
+5461 
+5462   for(i = 0; i < NDIRECT; i++){
+5463     if(ip->addrs[i]){
+5464       bfree(ip->dev, ip->addrs[i]);
+5465       ip->addrs[i] = 0;
+5466     }
+5467   }
+5468 
+5469   if(ip->addrs[NDIRECT]){
+5470     bp = bread(ip->dev, ip->addrs[NDIRECT]);
+5471     a = (uint*)bp->data;
+5472     for(j = 0; j < NINDIRECT; j++){
+5473       if(a[j])
+5474         bfree(ip->dev, a[j]);
+5475     }
+5476     brelse(bp);
+5477     bfree(ip->dev, ip->addrs[NDIRECT]);
+5478     ip->addrs[NDIRECT] = 0;
+5479   }
+5480 
+5481   ip->size = 0;
+5482   iupdate(ip);
+5483 }
+5484 
+5485 
+5486 
+5487 void
+5488 stati(struct inode *ip, struct stat *st)
+5489 {
+5490   st->dev = ip->dev;
+5491   st->ino = ip->inum;
+5492   st->type = ip->type;
+5493   st->nlink = ip->nlink;
+5494   st->size = ip->size;
+5495 }
+5496 
+5497 
+5498 
+5499 
+5500 
+5501 
+5502 int
+5503 readi(struct inode *ip, char *dst, uint off, uint n)
+5504 {
+5505   uint tot, m;
+5506   struct buf *bp;
+5507 
+5508   if(ip->type == T_DEV){
+5509     if(ip->major < 0 || ip->major >= NDEV || !devsw[ip->major].read)
+5510       return -1;
+5511     return devsw[ip->major].read(ip, dst, n);
+5512   }
+5513 
+5514   if(off > ip->size || off + n < off)
+5515     return -1;
+5516   if(off + n > ip->size)
+5517     n = ip->size - off;
+5518 
+5519   for(tot=0; tot<n; tot+=m, off+=m, dst+=m){
+5520     bp = bread(ip->dev, bmap(ip, off/BSIZE));
+5521     m = min(n - tot, BSIZE - off%BSIZE);
+5522     memmove(dst, bp->data + off%BSIZE, m);
+5523     brelse(bp);
+5524   }
+5525   return n;
+5526 }
+5527 
+5528 
+5529 
+5530 
+5531 
+5532 
+5533 
+5534 
+5535 
+5536 
+5537 
+5538 
+5539 
+5540 
+5541 
+5542 
+5543 
+5544 
+5545 
+5546 
+5547 
+5548 
+5549 
+5550 
+5551 
+5552 int
+5553 writei(struct inode *ip, char *src, uint off, uint n)
+5554 {
+5555   uint tot, m;
+5556   struct buf *bp;
+5557 
+5558   if(ip->type == T_DEV){
+5559     if(ip->major < 0 || ip->major >= NDEV || !devsw[ip->major].write)
+5560       return -1;
+5561     return devsw[ip->major].write(ip, src, n);
+5562   }
+5563 
+5564   if(off > ip->size || off + n < off)
+5565     return -1;
+5566   if(off + n > MAXFILE*BSIZE)
+5567     return -1;
+5568 
+5569   for(tot=0; tot<n; tot+=m, off+=m, src+=m){
+5570     bp = bread(ip->dev, bmap(ip, off/BSIZE));
+5571     m = min(n - tot, BSIZE - off%BSIZE);
+5572     memmove(bp->data + off%BSIZE, src, m);
+5573     log_write(bp);
+5574     brelse(bp);
+5575   }
+5576 
+5577   if(n > 0 && off > ip->size){
+5578     ip->size = off;
+5579     iupdate(ip);
+5580   }
+5581   return n;
+5582 }
+5583 
+5584 
+5585 
+5586 
+5587 
+5588 
+5589 
+5590 
+5591 
+5592 
+5593 
+5594 
+5595 
+5596 
+5597 
+5598 
+5599 
+5600 
+5601 
+5602 int
+5603 namecmp(const char *s, const char *t)
+5604 {
+5605   return strncmp(s, t, DIRSIZ);
+5606 }
+5607 
+5608 
+5609 
+5610 struct inode*
+5611 dirlookup(struct inode *dp, char *name, uint *poff)
+5612 {
+5613   uint off, inum;
+5614   struct dirent de;
+5615 
+5616   if(dp->type != T_DIR)
+5617     panic("dirlookup not DIR");
+5618 
+5619   for(off = 0; off < dp->size; off += sizeof(de)){
+5620     if(readi(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
+5621       panic("dirlookup read");
+5622     if(de.inum == 0)
+5623       continue;
+5624     if(namecmp(name, de.name) == 0){
+5625       
+5626       if(poff)
+5627         *poff = off;
+5628       inum = de.inum;
+5629       return iget(dp->dev, inum);
+5630     }
+5631   }
+5632 
+5633   return 0;
+5634 }
+5635 
+5636 
+5637 
+5638 
+5639 
+5640 
+5641 
+5642 
+5643 
+5644 
+5645 
+5646 
+5647 
+5648 
+5649 
+5650 
+5651 int
+5652 dirlink(struct inode *dp, char *name, uint inum)
+5653 {
+5654   int off;
+5655   struct dirent de;
+5656   struct inode *ip;
+5657 
+5658   
+5659   if((ip = dirlookup(dp, name, 0)) != 0){
+5660     iput(ip);
+5661     return -1;
+5662   }
+5663 
+5664   
+5665   for(off = 0; off < dp->size; off += sizeof(de)){
+5666     if(readi(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
+5667       panic("dirlink read");
+5668     if(de.inum == 0)
+5669       break;
+5670   }
+5671 
+5672   strncpy(de.name, name, DIRSIZ);
+5673   de.inum = inum;
+5674   if(writei(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
+5675     panic("dirlink");
+5676 
+5677   return 0;
+5678 }
+5679 
+5680 
+5681 
+5682 
+5683 
+5684 
+5685 
+5686 
+5687 
+5688 
+5689 
+5690 
+5691 
+5692 
+5693 
+5694 
+5695 
+5696 
+5697 
+5698 
+5699 
+5700 
+5701 
+5702 
+5703 
+5704 
+5705 
+5706 
+5707 
+5708 
+5709 
+5710 
+5711 
+5712 
+5713 
+5714 static char*
+5715 skipelem(char *path, char *name)
+5716 {
+5717   char *s;
+5718   int len;
+5719 
+5720   while(*path == '/')
+5721     path++;
+5722   if(*path == 0)
+5723     return 0;
+5724   s = path;
+5725   while(*path != '/' && *path != 0)
+5726     path++;
+5727   len = path - s;
+5728   if(len >= DIRSIZ)
+5729     memmove(name, s, DIRSIZ);
+5730   else {
+5731     memmove(name, s, len);
+5732     name[len] = 0;
+5733   }
+5734   while(*path == '/')
+5735     path++;
+5736   return path;
+5737 }
+5738 
+5739 
+5740 
+5741 
+5742 
+5743 
+5744 
+5745 
+5746 
+5747 
+5748 
+5749 
+5750 
+5751 
+5752 
+5753 
+5754 static struct inode*
+5755 namex(char *path, int nameiparent, char *name)
+5756 {
+5757   struct inode *ip, *next;
+5758 
+5759   if(*path == '/')
+5760     ip = iget(ROOTDEV, ROOTINO);
+5761   else
+5762     ip = idup(myproc()->cwd);
+5763 
+5764   while((path = skipelem(path, name)) != 0){
+5765     ilock(ip);
+5766     if(ip->type != T_DIR){
+5767       iunlockput(ip);
+5768       return 0;
+5769     }
+5770     if(nameiparent && *path == '\0'){
+5771       
+5772       iunlock(ip);
+5773       return ip;
+5774     }
+5775     if((next = dirlookup(ip, name, 0)) == 0){
+5776       iunlockput(ip);
+5777       return 0;
+5778     }
+5779     iunlockput(ip);
+5780     ip = next;
+5781   }
+5782   if(nameiparent){
+5783     iput(ip);
+5784     return 0;
+5785   }
+5786   return ip;
+5787 }
+5788 
+5789 struct inode*
+5790 namei(char *path)
+5791 {
+5792   char name[DIRSIZ];
+5793   return namex(path, 0, name);
+5794 }
+5795 
+5796 
+5797 
+5798 
+5799 
+5800 struct inode*
+5801 nameiparent(char *path, char *name)
+5802 {
+5803   return namex(path, 1, name);
+5804 }
+5805 
+5806 
+5807 
+5808 
+5809 
+5810 
+5811 
+5812 
+5813 
+5814 
+5815 
+5816 
+5817 
+5818 
+5819 
+5820 
+5821 
+5822 
+5823 
+5824 
+5825 
+5826 
+5827 
+5828 
+5829 
+5830 
+5831 
+5832 
+5833 
+5834 
+5835 
+5836 
+5837 
+5838 
+5839 
+5840 
+5841 
+5842 
+5843 
+5844 
+5845 
+5846 
+5847 
+5848 
+5849 
+5850 
+5851 
+5852 
+5853 
+5854 #include "types.h"
+5855 #include "defs.h"
+5856 #include "param.h"
+5857 #include "fs.h"
+5858 #include "spinlock.h"
+5859 #include "sleeplock.h"
+5860 #include "file.h"
+5861 
+5862 struct devsw devsw[NDEV];
+5863 struct {
+5864   struct spinlock lock;
+5865   struct file file[NFILE];
+5866 } ftable;
+5867 
+5868 void
+5869 fileinit(void)
+5870 {
+5871   initlock(&ftable.lock, "ftable");
+5872 }
+5873 
+5874 
+5875 struct file*
+5876 filealloc(void)
+5877 {
+5878   struct file *f;
+5879 
+5880   acquire(&ftable.lock);
+5881   for(f = ftable.file; f < ftable.file + NFILE; f++){
+5882     if(f->ref == 0){
+5883       f->ref = 1;
+5884       release(&ftable.lock);
+5885       return f;
+5886     }
+5887   }
+5888   release(&ftable.lock);
+5889   return 0;
+5890 }
+5891 
+5892 
+5893 
+5894 
+5895 
+5896 
+5897 
+5898 
+5899 
+5900 
+5901 struct file*
+5902 filedup(struct file *f)
+5903 {
+5904   acquire(&ftable.lock);
+5905   if(f->ref < 1)
+5906     panic("filedup");
+5907   f->ref++;
+5908   release(&ftable.lock);
+5909   return f;
+5910 }
+5911 
+5912 
+5913 void
+5914 fileclose(struct file *f)
+5915 {
+5916   struct file ff;
+5917 
+5918   acquire(&ftable.lock);
+5919   if(f->ref < 1)
+5920     panic("fileclose");
+5921   if(--f->ref > 0){
+5922     release(&ftable.lock);
+5923     return;
+5924   }
+5925   ff = *f;
+5926   f->ref = 0;
+5927   f->type = FD_NONE;
+5928   release(&ftable.lock);
+5929 
+5930   if(ff.type == FD_PIPE)
+5931     pipeclose(ff.pipe, ff.writable);
+5932   else if(ff.type == FD_INODE){
+5933     begin_op();
+5934     iput(ff.ip);
+5935     end_op();
+5936   }
+5937 }
+5938 
+5939 
+5940 
+5941 
+5942 
+5943 
+5944 
+5945 
+5946 
+5947 
+5948 
+5949 
+5950 
+5951 int
+5952 filestat(struct file *f, struct stat *st)
+5953 {
+5954   if(f->type == FD_INODE){
+5955     ilock(f->ip);
+5956     stati(f->ip, st);
+5957     iunlock(f->ip);
+5958     return 0;
+5959   }
+5960   return -1;
+5961 }
+5962 
+5963 
+5964 int
+5965 fileread(struct file *f, char *addr, int n)
+5966 {
+5967   int r;
+5968 
+5969   if(f->readable == 0)
+5970     return -1;
+5971   if(f->type == FD_PIPE)
+5972     return piperead(f->pipe, addr, n);
+5973   if(f->type == FD_INODE){
+5974     ilock(f->ip);
+5975     if((r = readi(f->ip, addr, f->off, n)) > 0)
+5976       f->off += r;
+5977     iunlock(f->ip);
+5978     return r;
+5979   }
+5980   panic("fileread");
+5981 }
+5982 
+5983 
+5984 
+5985 
+5986 
+5987 
+5988 
+5989 
+5990 
+5991 
+5992 
+5993 
+5994 
+5995 
+5996 
+5997 
+5998 
+5999 
+6000 
+6001 int
+6002 filewrite(struct file *f, char *addr, int n)
+6003 {
+6004   int r;
+6005 
+6006   if(f->writable == 0)
+6007     return -1;
+6008   if(f->type == FD_PIPE)
+6009     return pipewrite(f->pipe, addr, n);
+6010   if(f->type == FD_INODE){
+6011     
+6012     
+6013     
+6014     
+6015     
+6016     
+6017     int max = ((MAXOPBLOCKS-1-1-2) / 2) * 512;
+6018     int i = 0;
+6019     while(i < n){
+6020       int n1 = n - i;
+6021       if(n1 > max)
+6022         n1 = max;
+6023 
+6024       begin_op();
+6025       ilock(f->ip);
+6026       if ((r = writei(f->ip, addr + i, f->off, n1)) > 0)
+6027         f->off += r;
+6028       iunlock(f->ip);
+6029       end_op();
+6030 
+6031       if(r < 0)
+6032         break;
+6033       if(r != n1)
+6034         panic("short filewrite");
+6035       i += r;
+6036     }
+6037     return i == n ? n : -1;
+6038   }
+6039   panic("filewrite");
+6040 }
+6041 
+6042 
+6043 
+6044 
+6045 
+6046 
+6047 
+6048 
+6049 
+6050 
+6051 
+6052 
+6053 
+6054 
+6055 
+6056 #include "types.h"
+6057 #include "defs.h"
+6058 #include "param.h"
+6059 #include "stat.h"
+6060 #include "mmu.h"
+6061 #include "proc.h"
+6062 #include "fs.h"
+6063 #include "spinlock.h"
+6064 #include "sleeplock.h"
+6065 #include "file.h"
+6066 #include "fcntl.h"
+6067 
+6068 
+6069 
+6070 static int
+6071 argfd(int n, int *pfd, struct file **pf)
+6072 {
+6073   int fd;
+6074   struct file *f;
+6075 
+6076   if(argint(n, &fd) < 0)
+6077     return -1;
+6078   if(fd < 0 || fd >= NOFILE || (f=myproc()->ofile[fd]) == 0)
+6079     return -1;
+6080   if(pfd)
+6081     *pfd = fd;
+6082   if(pf)
+6083     *pf = f;
+6084   return 0;
+6085 }
+6086 
+6087 
+6088 
+6089 
+6090 
+6091 
+6092 
+6093 
+6094 
+6095 
+6096 
+6097 
+6098 
+6099 
+6100 
+6101 
+6102 static int
+6103 fdalloc(struct file *f)
+6104 {
+6105   int fd;
+6106   struct proc *curproc = myproc();
+6107 
+6108   for(fd = 0; fd < NOFILE; fd++){
+6109     if(curproc->ofile[fd] == 0){
+6110       curproc->ofile[fd] = f;
+6111       return fd;
+6112     }
+6113   }
+6114   return -1;
+6115 }
+6116 
+6117 int
+6118 sys_dup(void)
+6119 {
+6120   struct file *f;
+6121   int fd;
+6122 
+6123   if(argfd(0, 0, &f) < 0)
+6124     return -1;
+6125   if((fd=fdalloc(f)) < 0)
+6126     return -1;
+6127   filedup(f);
+6128   return fd;
+6129 }
+6130 
+6131 int
+6132 sys_read(void)
+6133 {
+6134   struct file *f;
+6135   int n;
+6136   char *p;
+6137 
+6138   if(argfd(0, 0, &f) < 0 || argint(2, &n) < 0 || argptr(1, &p, n) < 0)
+6139     return -1;
+6140   return fileread(f, p, n);
+6141 }
+6142 
+6143 
+6144 
+6145 
+6146 
+6147 
+6148 
+6149 
+6150 int
+6151 sys_write(void)
+6152 {
+6153   struct file *f;
+6154   int n;
+6155   char *p;
+6156 
+6157   if(argfd(0, 0, &f) < 0 || argint(2, &n) < 0 || argptr(1, &p, n) < 0)
+6158     return -1;
+6159   return filewrite(f, p, n);
+6160 }
+6161 
+6162 int
+6163 sys_close(void)
+6164 {
+6165   int fd;
+6166   struct file *f;
+6167 
+6168   if(argfd(0, &fd, &f) < 0)
+6169     return -1;
+6170   myproc()->ofile[fd] = 0;
+6171   fileclose(f);
+6172   return 0;
+6173 }
+6174 
+6175 int
+6176 sys_fstat(void)
+6177 {
+6178   struct file *f;
+6179   struct stat *st;
+6180 
+6181   if(argfd(0, 0, &f) < 0 || argptr(1, (void*)&st, sizeof(*st)) < 0)
+6182     return -1;
+6183   return filestat(f, st);
+6184 }
+6185 
+6186 
+6187 
+6188 
+6189 
+6190 
+6191 
+6192 
+6193 
+6194 
+6195 
+6196 
+6197 
+6198 
+6199 
+6200 
+6201 int
+6202 sys_link(void)
+6203 {
+6204   char name[DIRSIZ], *new, *old;
+6205   struct inode *dp, *ip;
+6206 
+6207   if(argstr(0, &old) < 0 || argstr(1, &new) < 0)
+6208     return -1;
+6209 
+6210   begin_op();
+6211   if((ip = namei(old)) == 0){
+6212     end_op();
+6213     return -1;
+6214   }
+6215 
+6216   ilock(ip);
+6217   if(ip->type == T_DIR){
+6218     iunlockput(ip);
+6219     end_op();
+6220     return -1;
+6221   }
+6222 
+6223   ip->nlink++;
+6224   iupdate(ip);
+6225   iunlock(ip);
+6226 
+6227   if((dp = nameiparent(new, name)) == 0)
+6228     goto bad;
+6229   ilock(dp);
+6230   if(dp->dev != ip->dev || dirlink(dp, name, ip->inum) < 0){
+6231     iunlockput(dp);
+6232     goto bad;
+6233   }
+6234   iunlockput(dp);
+6235   iput(ip);
+6236 
+6237   end_op();
+6238 
+6239   return 0;
+6240 
+6241 bad:
+6242   ilock(ip);
+6243   ip->nlink--;
+6244   iupdate(ip);
+6245   iunlockput(ip);
+6246   end_op();
+6247   return -1;
+6248 }
+6249 
+6250 
+6251 static int
+6252 isdirempty(struct inode *dp)
+6253 {
+6254   int off;
+6255   struct dirent de;
+6256 
+6257   for(off=2*sizeof(de); off<dp->size; off+=sizeof(de)){
+6258     if(readi(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
+6259       panic("isdirempty: readi");
+6260     if(de.inum != 0)
+6261       return 0;
+6262   }
+6263   return 1;
+6264 }
+6265 
+6266 
+6267 
+6268 
+6269 
+6270 
+6271 
+6272 
+6273 
+6274 
+6275 
+6276 
+6277 
+6278 
+6279 
+6280 
+6281 
+6282 
+6283 
+6284 
+6285 
+6286 
+6287 
+6288 
+6289 
+6290 
+6291 
+6292 
+6293 
+6294 
+6295 
+6296 
+6297 
+6298 
+6299 
+6300 int
+6301 sys_unlink(void)
+6302 {
+6303   struct inode *ip, *dp;
+6304   struct dirent de;
+6305   char name[DIRSIZ], *path;
+6306   uint off;
+6307 
+6308   if(argstr(0, &path) < 0)
+6309     return -1;
+6310 
+6311   begin_op();
+6312   if((dp = nameiparent(path, name)) == 0){
+6313     end_op();
+6314     return -1;
+6315   }
+6316 
+6317   ilock(dp);
+6318 
+6319   
+6320   if(namecmp(name, ".") == 0 || namecmp(name, "..") == 0)
+6321     goto bad;
+6322 
+6323   if((ip = dirlookup(dp, name, &off)) == 0)
+6324     goto bad;
+6325   ilock(ip);
+6326 
+6327   if(ip->nlink < 1)
+6328     panic("unlink: nlink < 1");
+6329   if(ip->type == T_DIR && !isdirempty(ip)){
+6330     iunlockput(ip);
+6331     goto bad;
+6332   }
+6333 
+6334   memset(&de, 0, sizeof(de));
+6335   if(writei(dp, (char*)&de, off, sizeof(de)) != sizeof(de))
+6336     panic("unlink: writei");
+6337   if(ip->type == T_DIR){
+6338     dp->nlink--;
+6339     iupdate(dp);
+6340   }
+6341   iunlockput(dp);
+6342 
+6343   ip->nlink--;
+6344   iupdate(ip);
+6345   iunlockput(ip);
+6346 
+6347   end_op();
+6348 
+6349   return 0;
+6350 bad:
+6351   iunlockput(dp);
+6352   end_op();
+6353   return -1;
+6354 }
+6355 
+6356 static struct inode*
+6357 create(char *path, short type, short major, short minor)
+6358 {
+6359   struct inode *ip, *dp;
+6360   char name[DIRSIZ];
+6361 
+6362   if((dp = nameiparent(path, name)) == 0)
+6363     return 0;
+6364   ilock(dp);
+6365 
+6366   if((ip = dirlookup(dp, name, 0)) != 0){
+6367     iunlockput(dp);
+6368     ilock(ip);
+6369     if(type == T_FILE && ip->type == T_FILE)
+6370       return ip;
+6371     iunlockput(ip);
+6372     return 0;
+6373   }
+6374 
+6375   if((ip = ialloc(dp->dev, type)) == 0)
+6376     panic("create: ialloc");
+6377 
+6378   ilock(ip);
+6379   ip->major = major;
+6380   ip->minor = minor;
+6381   ip->nlink = 1;
+6382   iupdate(ip);
+6383 
+6384   if(type == T_DIR){  
+6385     dp->nlink++;  
+6386     iupdate(dp);
+6387     
+6388     if(dirlink(ip, ".", ip->inum) < 0 || dirlink(ip, "..", dp->inum) < 0)
+6389       panic("create dots");
+6390   }
+6391 
+6392   if(dirlink(dp, name, ip->inum) < 0)
+6393     panic("create: dirlink");
+6394 
+6395   iunlockput(dp);
+6396 
+6397   return ip;
+6398 }
+6399 
+6400 int
+6401 sys_open(void)
+6402 {
+6403   char *path;
+6404   int fd, omode;
+6405   struct file *f;
+6406   struct inode *ip;
+6407 
+6408   if(argstr(0, &path) < 0 || argint(1, &omode) < 0)
+6409     return -1;
+6410 
+6411   begin_op();
+6412 
+6413   if(omode & O_CREATE){
+6414     ip = create(path, T_FILE, 0, 0);
+6415     if(ip == 0){
+6416       end_op();
+6417       return -1;
+6418     }
+6419   } else {
+6420     if((ip = namei(path)) == 0){
+6421       end_op();
+6422       return -1;
+6423     }
+6424     ilock(ip);
+6425     if(ip->type == T_DIR && omode != O_RDONLY){
+6426       iunlockput(ip);
+6427       end_op();
+6428       return -1;
+6429     }
+6430   }
+6431 
+6432   if((f = filealloc()) == 0 || (fd = fdalloc(f)) < 0){
+6433     if(f)
+6434       fileclose(f);
+6435     iunlockput(ip);
+6436     end_op();
+6437     return -1;
+6438   }
+6439   iunlock(ip);
+6440   end_op();
+6441 
+6442   f->type = FD_INODE;
+6443   f->ip = ip;
+6444   f->off = 0;
+6445   f->readable = !(omode & O_WRONLY);
+6446   f->writable = (omode & O_WRONLY) || (omode & O_RDWR);
+6447   return fd;
+6448 }
+6449 
+6450 int
+6451 sys_mkdir(void)
+6452 {
+6453   char *path;
+6454   struct inode *ip;
+6455 
+6456   begin_op();
+6457   if(argstr(0, &path) < 0 || (ip = create(path, T_DIR, 0, 0)) == 0){
+6458     end_op();
+6459     return -1;
+6460   }
+6461   iunlockput(ip);
+6462   end_op();
+6463   return 0;
+6464 }
+6465 
+6466 int
+6467 sys_mknod(void)
+6468 {
+6469   struct inode *ip;
+6470   char *path;
+6471   int major, minor;
+6472 
+6473   begin_op();
+6474   if((argstr(0, &path)) < 0 ||
+6475      argint(1, &major) < 0 ||
+6476      argint(2, &minor) < 0 ||
+6477      (ip = create(path, T_DEV, major, minor)) == 0){
+6478     end_op();
+6479     return -1;
+6480   }
+6481   iunlockput(ip);
+6482   end_op();
+6483   return 0;
+6484 }
+6485 
+6486 
+6487 
+6488 
+6489 
+6490 
+6491 
+6492 
+6493 
+6494 
+6495 
+6496 
+6497 
+6498 
+6499 
+6500 int
+6501 sys_chdir(void)
+6502 {
+6503   char *path;
+6504   struct inode *ip;
+6505   struct proc *curproc = myproc();
+6506 
+6507   begin_op();
+6508   if(argstr(0, &path) < 0 || (ip = namei(path)) == 0){
+6509     end_op();
+6510     return -1;
+6511   }
+6512   ilock(ip);
+6513   if(ip->type != T_DIR){
+6514     iunlockput(ip);
+6515     end_op();
+6516     return -1;
+6517   }
+6518   iunlock(ip);
+6519   iput(curproc->cwd);
+6520   end_op();
+6521   curproc->cwd = ip;
+6522   return 0;
+6523 }
+6524 
+6525 int
+6526 sys_exec(void)
+6527 {
+6528   char *path, *argv[MAXARG];
+6529   int i;
+6530   uint uargv, uarg;
+6531 
+6532   if(argstr(0, &path) < 0 || argint(1, (int*)&uargv) < 0){
+6533     return -1;
+6534   }
+6535   memset(argv, 0, sizeof(argv));
+6536   for(i=0;; i++){
+6537     if(i >= NELEM(argv))
+6538       return -1;
+6539     if(fetchint(uargv+4*i, (int*)&uarg) < 0)
+6540       return -1;
+6541     if(uarg == 0){
+6542       argv[i] = 0;
+6543       break;
+6544     }
+6545     if(fetchstr(uarg, &argv[i]) < 0)
+6546       return -1;
+6547   }
+6548   return exec(path, argv);
+6549 }
+6550 int
+6551 sys_pipe(void)
+6552 {
+6553   int *fd;
+6554   struct file *rf, *wf;
+6555   int fd0, fd1;
+6556 
+6557   if(argptr(0, (void*)&fd, 2*sizeof(fd[0])) < 0)
+6558     return -1;
+6559   if(pipealloc(&rf, &wf) < 0)
+6560     return -1;
+6561   fd0 = -1;
+6562   if((fd0 = fdalloc(rf)) < 0 || (fd1 = fdalloc(wf)) < 0){
+6563     if(fd0 >= 0)
+6564       myproc()->ofile[fd0] = 0;
+6565     fileclose(rf);
+6566     fileclose(wf);
+6567     return -1;
+6568   }
+6569   fd[0] = fd0;
+6570   fd[1] = fd1;
+6571   return 0;
+6572 }
+6573 
+6574 
+6575 
+6576 
+6577 
+6578 
+6579 
+6580 
+6581 
+6582 
+6583 
+6584 
+6585 
+6586 
+6587 
+6588 
+6589 
+6590 
+6591 
+6592 
+6593 
+6594 
+6595 
+6596 
+6597 
+6598 
+6599 
+6600 #include "types.h"
+6601 #include "param.h"
+6602 #include "memlayout.h"
+6603 #include "mmu.h"
+6604 #include "proc.h"
+6605 #include "defs.h"
+6606 #include "x86.h"
+6607 #include "elf.h"
+6608 
+6609 int
+6610 exec(char *path, char **argv)
+6611 {
+6612   char *s, *last;
+6613   int i, off;
+6614   uint argc, sz, sp, ustack[3+MAXARG+1];
+6615   struct elfhdr elf;
+6616   struct inode *ip;
+6617   struct proghdr ph;
+6618   pde_t *pgdir, *oldpgdir;
+6619   struct proc *curproc = myproc();
+6620 
+6621   begin_op();
+6622 
+6623   if((ip = namei(path)) == 0){
+6624     end_op();
+6625     cprintf("exec: fail\n");
+6626     return -1;
+6627   }
+6628   ilock(ip);
+6629   pgdir = 0;
+6630 
+6631   
+6632   if(readi(ip, (char*)&elf, 0, sizeof(elf)) != sizeof(elf))
+6633     goto bad;
+6634   if(elf.magic != ELF_MAGIC)
+6635     goto bad;
+6636 
+6637   if((pgdir = setupkvm()) == 0)
+6638     goto bad;
+6639 
+6640   
+6641   sz = 0;
+6642   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
+6643     if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
+6644       goto bad;
+6645     if(ph.type != ELF_PROG_LOAD)
+6646       continue;
+6647     if(ph.memsz < ph.filesz)
+6648       goto bad;
+6649     if(ph.vaddr + ph.memsz < ph.vaddr)
+6650       goto bad;
+6651     if((sz = allocuvm(pgdir, sz, ph.vaddr + ph.memsz)) == 0)
+6652       goto bad;
+6653     if(ph.vaddr % PGSIZE != 0)
+6654       goto bad;
+6655     if(loaduvm(pgdir, (char*)ph.vaddr, ip, ph.off, ph.filesz) < 0)
+6656       goto bad;
+6657   }
+6658   iunlockput(ip);
+6659   end_op();
+6660   ip = 0;
+6661 
+6662   
+6663   
+6664   sz = PGROUNDUP(sz);
+6665   if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
+6666     goto bad;
+6667   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
+6668   sp = sz;
+6669 
+6670   
+6671   for(argc = 0; argv[argc]; argc++) {
+6672     if(argc >= MAXARG)
+6673       goto bad;
+6674     sp = (sp - (strlen(argv[argc]) + 1)) & ~3;
+6675     if(copyout(pgdir, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
+6676       goto bad;
+6677     ustack[3+argc] = sp;
+6678   }
+6679   ustack[3+argc] = 0;
+6680 
+6681   ustack[0] = 0xffffffff;  
+6682   ustack[1] = argc;
+6683   ustack[2] = sp - (argc+1)*4;  
+6684 
+6685   sp -= (3+argc+1) * 4;
+6686   if(copyout(pgdir, sp, ustack, (3+argc+1)*4) < 0)
+6687     goto bad;
+6688 
+6689   
+6690   for(last=s=path; *s; s++)
+6691     if(*s == '/')
+6692       last = s+1;
+6693   safestrcpy(curproc->name, last, sizeof(curproc->name));
+6694 
+6695   
+6696   oldpgdir = curproc->pgdir;
+6697   curproc->pgdir = pgdir;
+6698   curproc->sz = sz;
+6699   curproc->tf->eip = elf.entry;  
+6700   curproc->tf->esp = sp;
+6701   switchuvm(curproc);
+6702   freevm(oldpgdir);
+6703   return 0;
+6704 
+6705  bad:
+6706   if(pgdir)
+6707     freevm(pgdir);
+6708   if(ip){
+6709     iunlockput(ip);
+6710     end_op();
+6711   }
+6712   return -1;
+6713 }
+6714 
+6715 
+6716 
+6717 
+6718 
+6719 
+6720 
+6721 
+6722 
+6723 
+6724 
+6725 
+6726 
+6727 
+6728 
+6729 
+6730 
+6731 
+6732 
+6733 
+6734 
+6735 
+6736 
+6737 
+6738 
+6739 
+6740 
+6741 
+6742 
+6743 
+6744 
+6745 
+6746 
+6747 
+6748 
+6749 
+6750 #include "types.h"
+6751 #include "defs.h"
+6752 #include "param.h"
+6753 #include "mmu.h"
+6754 #include "proc.h"
+6755 #include "fs.h"
+6756 #include "spinlock.h"
+6757 #include "sleeplock.h"
+6758 #include "file.h"
+6759 
+6760 #define PIPESIZE 512
+6761 
+6762 struct pipe {
+6763   struct spinlock lock;
+6764   char data[PIPESIZE];
+6765   uint nread;     
+6766   uint nwrite;    
+6767   int readopen;   
+6768   int writeopen;  
+6769 };
+6770 
+6771 int
+6772 pipealloc(struct file **f0, struct file **f1)
+6773 {
+6774   struct pipe *p;
+6775 
+6776   p = 0;
+6777   *f0 = *f1 = 0;
+6778   if((*f0 = filealloc()) == 0 || (*f1 = filealloc()) == 0)
+6779     goto bad;
+6780   if((p = (struct pipe*)kalloc()) == 0)
+6781     goto bad;
+6782   p->readopen = 1;
+6783   p->writeopen = 1;
+6784   p->nwrite = 0;
+6785   p->nread = 0;
+6786   initlock(&p->lock, "pipe");
+6787   (*f0)->type = FD_PIPE;
+6788   (*f0)->readable = 1;
+6789   (*f0)->writable = 0;
+6790   (*f0)->pipe = p;
+6791   (*f1)->type = FD_PIPE;
+6792   (*f1)->readable = 0;
+6793   (*f1)->writable = 1;
+6794   (*f1)->pipe = p;
+6795   return 0;
+6796 
+6797 
+6798 
+6799 
+6800  bad:
+6801   if(p)
+6802     kfree((char*)p);
+6803   if(*f0)
+6804     fileclose(*f0);
+6805   if(*f1)
+6806     fileclose(*f1);
+6807   return -1;
+6808 }
+6809 
+6810 void
+6811 pipeclose(struct pipe *p, int writable)
+6812 {
+6813   acquire(&p->lock);
+6814   if(writable){
+6815     p->writeopen = 0;
+6816     wakeup(&p->nread);
+6817   } else {
+6818     p->readopen = 0;
+6819     wakeup(&p->nwrite);
+6820   }
+6821   if(p->readopen == 0 && p->writeopen == 0){
+6822     release(&p->lock);
+6823     kfree((char*)p);
+6824   } else
+6825     release(&p->lock);
+6826 }
+6827 
+6828 
+6829 int
+6830 pipewrite(struct pipe *p, char *addr, int n)
+6831 {
+6832   int i;
+6833 
+6834   acquire(&p->lock);
+6835   for(i = 0; i < n; i++){
+6836     while(p->nwrite == p->nread + PIPESIZE){  
+6837       if(p->readopen == 0 || myproc()->killed){
+6838         release(&p->lock);
+6839         return -1;
+6840       }
+6841       wakeup(&p->nread);
+6842       sleep(&p->nwrite, &p->lock);  
+6843     }
+6844     p->data[p->nwrite++ % PIPESIZE] = addr[i];
+6845   }
+6846   wakeup(&p->nread);  
+6847   release(&p->lock);
+6848   return n;
+6849 }
+6850 int
+6851 piperead(struct pipe *p, char *addr, int n)
+6852 {
+6853   int i;
+6854 
+6855   acquire(&p->lock);
+6856   while(p->nread == p->nwrite && p->writeopen){  
+6857     if(myproc()->killed){
+6858       release(&p->lock);
+6859       return -1;
+6860     }
+6861     sleep(&p->nread, &p->lock); 
+6862   }
+6863   for(i = 0; i < n; i++){  
+6864     if(p->nread == p->nwrite)
+6865       break;
+6866     addr[i] = p->data[p->nread++ % PIPESIZE];
+6867   }
+6868   wakeup(&p->nwrite);  
+6869   release(&p->lock);
+6870   return i;
+6871 }
+6872 
+6873 
+6874 
+6875 
+6876 
+6877 
+6878 
+6879 
+6880 
+6881 
+6882 
+6883 
+6884 
+6885 
+6886 
+6887 
+6888 
+6889 
+6890 
+6891 
+6892 
+6893 
+6894 
+6895 
+6896 
+6897 
+6898 
+6899 
+6900 #include "types.h"
+6901 #include "x86.h"
+6902 
+6903 void*
+6904 memset(void *dst, int c, uint n)
+6905 {
+6906   if ((int)dst%4 == 0 && n%4 == 0){
+6907     c &= 0xFF;
+6908     stosl(dst, (c<<24)|(c<<16)|(c<<8)|c, n/4);
+6909   } else
+6910     stosb(dst, c, n);
+6911   return dst;
+6912 }
+6913 
+6914 int
+6915 memcmp(const void *v1, const void *v2, uint n)
+6916 {
+6917   const uchar *s1, *s2;
+6918 
+6919   s1 = v1;
+6920   s2 = v2;
+6921   while(n-- > 0){
+6922     if(*s1 != *s2)
+6923       return *s1 - *s2;
+6924     s1++, s2++;
+6925   }
+6926 
+6927   return 0;
+6928 }
+6929 
+6930 void*
+6931 memmove(void *dst, const void *src, uint n)
+6932 {
+6933   const char *s;
+6934   char *d;
+6935 
+6936   s = src;
+6937   d = dst;
+6938   if(s < d && s + n > d){
+6939     s += n;
+6940     d += n;
+6941     while(n-- > 0)
+6942       *--d = *--s;
+6943   } else
+6944     while(n-- > 0)
+6945       *d++ = *s++;
+6946 
+6947   return dst;
+6948 }
+6949 
+6950 
+6951 void*
+6952 memcpy(void *dst, const void *src, uint n)
+6953 {
+6954   return memmove(dst, src, n);
+6955 }
+6956 
+6957 int
+6958 strncmp(const char *p, const char *q, uint n)
+6959 {
+6960   while(n > 0 && *p && *p == *q)
+6961     n--, p++, q++;
+6962   if(n == 0)
+6963     return 0;
+6964   return (uchar)*p - (uchar)*q;
+6965 }
+6966 
+6967 char*
+6968 strncpy(char *s, const char *t, int n)
+6969 {
+6970   char *os;
+6971 
+6972   os = s;
+6973   while(n-- > 0 && (*s++ = *t++) != 0)
+6974     ;
+6975   while(n-- > 0)
+6976     *s++ = 0;
+6977   return os;
+6978 }
+6979 
+6980 
+6981 char*
+6982 safestrcpy(char *s, const char *t, int n)
+6983 {
+6984   char *os;
+6985 
+6986   os = s;
+6987   if(n <= 0)
+6988     return os;
+6989   while(--n > 0 && (*s++ = *t++) != 0)
+6990     ;
+6991   *s = 0;
+6992   return os;
+6993 }
+6994 
+6995 
+6996 
+6997 
+6998 
+6999 
+7000 int
+7001 strlen(const char *s)
+7002 {
+7003   int n;
+7004 
+7005   for(n = 0; s[n]; n++)
+7006     ;
+7007   return n;
+7008 }
+7009 
+7010 
+7011 
+7012 
+7013 
+7014 
+7015 
+7016 
+7017 
+7018 
+7019 
+7020 
+7021 
+7022 
+7023 
+7024 
+7025 
+7026 
+7027 
+7028 
+7029 
+7030 
+7031 
+7032 
+7033 
+7034 
+7035 
+7036 
+7037 
+7038 
+7039 
+7040 
+7041 
+7042 
+7043 
+7044 
+7045 
+7046 
+7047 
+7048 
+7049 
+7050 
+7051 
+7052 struct mp {             
+7053   uchar signature[4];           
+7054   void *physaddr;               
+7055   uchar length;                 
+7056   uchar specrev;                
+7057   uchar checksum;               
+7058   uchar type;                   
+7059   uchar imcrp;
+7060   uchar reserved[3];
+7061 };
+7062 
+7063 struct mpconf {         
+7064   uchar signature[4];           
+7065   ushort length;                
+7066   uchar version;                
+7067   uchar checksum;               
+7068   uchar product[20];            
+7069   uint *oemtable;               
+7070   ushort oemlength;             
+7071   ushort entry;                 
+7072   uint *lapicaddr;              
+7073   ushort xlength;               
+7074   uchar xchecksum;              
+7075   uchar reserved;
+7076 };
+7077 
+7078 struct mpproc {         
+7079   uchar type;                   
+7080   uchar apicid;                 
+7081   uchar version;                
+7082   uchar flags;                  
+7083     #define MPBOOT 0x02           
+7084   uchar signature[4];           
+7085   uint feature;                 
+7086   uchar reserved[8];
+7087 };
+7088 
+7089 struct mpioapic {       
+7090   uchar type;                   
+7091   uchar apicno;                 
+7092   uchar version;                
+7093   uchar flags;                  
+7094   uint *addr;                  
+7095 };
+7096 
+7097 
+7098 
+7099 
+7100 
+7101 #define MPPROC    0x00  
+7102 #define MPBUS     0x01  
+7103 #define MPIOAPIC  0x02  
+7104 #define MPIOINTR  0x03  
+7105 #define MPLINTR   0x04  
+7106 
+7107 
+7108 
+7109 
+7110 
+7111 
+7112 
+7113 
+7114 
+7115 
+7116 
+7117 
+7118 
+7119 
+7120 
+7121 
+7122 
+7123 
+7124 
+7125 
+7126 
+7127 
+7128 
+7129 
+7130 
+7131 
+7132 
+7133 
+7134 
+7135 
+7136 
+7137 
+7138 
+7139 
+7140 
+7141 
+7142 
+7143 
+7144 
+7145 
+7146 
+7147 
+7148 
+7149 
+7150 
+7151 
+7152 
+7153 
+7154 
+7155 
+7156 
+7157 
+7158 
+7159 
+7160 
+7161 
+7162 
+7163 
+7164 
+7165 
+7166 
+7167 
+7168 
+7169 
+7170 
+7171 
+7172 
+7173 
+7174 
+7175 
+7176 
+7177 
+7178 
+7179 
+7180 
+7181 
+7182 
+7183 
+7184 
+7185 
+7186 
+7187 
+7188 
+7189 
+7190 
+7191 
+7192 
+7193 
+7194 
+7195 
+7196 
+7197 
+7198 
+7199 
+7200 
+7201 
+7202 
+7203 
+7204 #include "types.h"
+7205 #include "defs.h"
+7206 #include "param.h"
+7207 #include "memlayout.h"
+7208 #include "mp.h"
+7209 #include "x86.h"
+7210 #include "mmu.h"
+7211 #include "proc.h"
+7212 
+7213 struct cpu cpus[NCPU];
+7214 int ncpu;
+7215 uchar ioapicid;
+7216 
+7217 static uchar
+7218 sum(uchar *addr, int len)
+7219 {
+7220   int i, sum;
+7221 
+7222   sum = 0;
+7223   for(i=0; i<len; i++)
+7224     sum += addr[i];
+7225   return sum;
+7226 }
+7227 
+7228 
+7229 static struct mp*
+7230 mpsearch1(uint a, int len)
+7231 {
+7232   uchar *e, *p, *addr;
+7233 
+7234   addr = P2V(a);
+7235   e = addr+len;
+7236   for(p = addr; p < e; p += sizeof(struct mp))
+7237     if(memcmp(p, "_MP_", 4) == 0 && sum(p, sizeof(struct mp)) == 0)
+7238       return (struct mp*)p;
+7239   return 0;
+7240 }
+7241 
+7242 
+7243 
+7244 
+7245 
+7246 
+7247 
+7248 
+7249 
+7250 
+7251 
+7252 
+7253 
+7254 
+7255 static struct mp*
+7256 mpsearch(void)
+7257 {
+7258   uchar *bda;
+7259   uint p;
+7260   struct mp *mp;
+7261 
+7262   bda = (uchar *) P2V(0x400);
+7263   if((p = ((bda[0x0F]<<8)| bda[0x0E]) << 4)){
+7264     if((mp = mpsearch1(p, 1024)))
+7265       return mp;
+7266   } else {
+7267     p = ((bda[0x14]<<8)|bda[0x13])*1024;
+7268     if((mp = mpsearch1(p-1024, 1024)))
+7269       return mp;
+7270   }
+7271   return mpsearch1(0xF0000, 0x10000);
+7272 }
+7273 
+7274 
+7275 
+7276 
+7277 
+7278 
+7279 static struct mpconf*
+7280 mpconfig(struct mp **pmp)
+7281 {
+7282   struct mpconf *conf;
+7283   struct mp *mp;
+7284 
+7285   if((mp = mpsearch()) == 0 || mp->physaddr == 0)
+7286     return 0;
+7287   conf = (struct mpconf*) P2V((uint) mp->physaddr);
+7288   if(memcmp(conf, "PCMP", 4) != 0)
+7289     return 0;
+7290   if(conf->version != 1 && conf->version != 4)
+7291     return 0;
+7292   if(sum((uchar*)conf, conf->length) != 0)
+7293     return 0;
+7294   *pmp = mp;
+7295   return conf;
+7296 }
+7297 
+7298 
+7299 
+7300 void
+7301 mpinit(void)
+7302 {
+7303   uchar *p, *e;
+7304   int ismp;
+7305   struct mp *mp;
+7306   struct mpconf *conf;
+7307   struct mpproc *proc;
+7308   struct mpioapic *ioapic;
+7309 
+7310   if((conf = mpconfig(&mp)) == 0)
+7311     panic("Expect to run on an SMP");
+7312   ismp = 1;
+7313   lapic = (uint*)conf->lapicaddr;
+7314   for(p=(uchar*)(conf+1), e=(uchar*)conf+conf->length; p<e; ){
+7315     switch(*p){
+7316     case MPPROC:
+7317       proc = (struct mpproc*)p;
+7318       if(ncpu < NCPU) {
+7319         cpus[ncpu].apicid = proc->apicid;  
+7320         ncpu++;
+7321       }
+7322       p += sizeof(struct mpproc);
+7323       continue;
+7324     case MPIOAPIC:
+7325       ioapic = (struct mpioapic*)p;
+7326       ioapicid = ioapic->apicno;
+7327       p += sizeof(struct mpioapic);
+7328       continue;
+7329     case MPBUS:
+7330     case MPIOINTR:
+7331     case MPLINTR:
+7332       p += 8;
+7333       continue;
+7334     default:
+7335       ismp = 0;
+7336       break;
+7337     }
+7338   }
+7339   if(!ismp)
+7340     panic("Didn't find a suitable machine");
+7341 
+7342   if(mp->imcrp){
+7343     
+7344     
+7345     outb(0x22, 0x70);   
+7346     outb(0x23, inb(0x23) | 1);  
+7347   }
+7348 }
+7349 
+7350 
+7351 
+7352 
+7353 #include "param.h"
+7354 #include "types.h"
+7355 #include "defs.h"
+7356 #include "date.h"
+7357 #include "memlayout.h"
+7358 #include "traps.h"
+7359 #include "mmu.h"
+7360 #include "x86.h"
+7361 
+7362 
+7363 #define ID      (0x0020/4)   
+7364 #define VER     (0x0030/4)   
+7365 #define TPR     (0x0080/4)   
+7366 #define EOI     (0x00B0/4)   
+7367 #define SVR     (0x00F0/4)   
+7368   #define ENABLE     0x00000100   
+7369 #define ESR     (0x0280/4)   
+7370 #define ICRLO   (0x0300/4)   
+7371   #define INIT       0x00000500   
+7372   #define STARTUP    0x00000600   
+7373   #define DELIVS     0x00001000   
+7374   #define ASSERT     0x00004000   
+7375   #define DEASSERT   0x00000000
+7376   #define LEVEL      0x00008000   
+7377   #define BCAST      0x00080000   
+7378   #define BUSY       0x00001000
+7379   #define FIXED      0x00000000
+7380 #define ICRHI   (0x0310/4)   
+7381 #define TIMER   (0x0320/4)   
+7382   #define X1         0x0000000B   
+7383   #define PERIODIC   0x00020000   
+7384 #define PCINT   (0x0340/4)   
+7385 #define LINT0   (0x0350/4)   
+7386 #define LINT1   (0x0360/4)   
+7387 #define ERROR   (0x0370/4)   
+7388   #define MASKED     0x00010000   
+7389 #define TICR    (0x0380/4)   
+7390 #define TCCR    (0x0390/4)   
+7391 #define TDCR    (0x03E0/4)   
+7392 
+7393 volatile uint *lapic;  
+7394 
+7395 
+7396 
+7397 
+7398 
+7399 
+7400 static void
+7401 lapicw(int index, int value)
+7402 {
+7403   lapic[index] = value;
+7404   lapic[ID];  
+7405 }
+7406 
+7407 void
+7408 lapicinit(void)
+7409 {
+7410   if(!lapic)
+7411     return;
+7412 
+7413   
+7414   lapicw(SVR, ENABLE | (T_IRQ0 + IRQ_SPURIOUS));
+7415 
+7416   
+7417   
+7418   
+7419   
+7420   lapicw(TDCR, X1);
+7421   lapicw(TIMER, PERIODIC | (T_IRQ0 + IRQ_TIMER));
+7422   lapicw(TICR, 10000000);
+7423 
+7424   
+7425   lapicw(LINT0, MASKED);
+7426   lapicw(LINT1, MASKED);
+7427 
+7428   
+7429   
+7430   if(((lapic[VER]>>16) & 0xFF) >= 4)
+7431     lapicw(PCINT, MASKED);
+7432 
+7433   
+7434   lapicw(ERROR, T_IRQ0 + IRQ_ERROR);
+7435 
+7436   
+7437   lapicw(ESR, 0);
+7438   lapicw(ESR, 0);
+7439 
+7440   
+7441   lapicw(EOI, 0);
+7442 
+7443   
+7444   lapicw(ICRHI, 0);
+7445   lapicw(ICRLO, BCAST | INIT | LEVEL);
+7446   while(lapic[ICRLO] & DELIVS)
+7447     ;
+7448 
+7449 
+7450   
+7451   lapicw(TPR, 0);
+7452 }
+7453 
+7454 int
+7455 lapicid(void)
+7456 {
+7457   if (!lapic)
+7458     return 0;
+7459   return lapic[ID] >> 24;
+7460 }
+7461 
+7462 
+7463 void
+7464 lapiceoi(void)
+7465 {
+7466   if(lapic)
+7467     lapicw(EOI, 0);
+7468 }
+7469 
+7470 
+7471 
+7472 void
+7473 microdelay(int us)
+7474 {
+7475 }
+7476 
+7477 #define CMOS_PORT    0x70
+7478 #define CMOS_RETURN  0x71
+7479 
+7480 
+7481 
+7482 void
+7483 lapicstartap(uchar apicid, uint addr)
+7484 {
+7485   int i;
+7486   ushort *wrv;
+7487 
+7488   
+7489   
+7490   
+7491   outb(CMOS_PORT, 0xF);  
+7492   outb(CMOS_PORT+1, 0x0A);
+7493   wrv = (ushort*)P2V((0x40<<4 | 0x67));  
+7494   wrv[0] = 0;
+7495   wrv[1] = addr >> 4;
+7496 
+7497 
+7498 
+7499 
+7500   
+7501   
+7502   lapicw(ICRHI, apicid<<24);
+7503   lapicw(ICRLO, INIT | LEVEL | ASSERT);
+7504   microdelay(200);
+7505   lapicw(ICRLO, INIT | LEVEL);
+7506   microdelay(100);    
+7507 
+7508   
+7509   
+7510   
+7511   
+7512   
+7513   for(i = 0; i < 2; i++){
+7514     lapicw(ICRHI, apicid<<24);
+7515     lapicw(ICRLO, STARTUP | (addr>>12));
+7516     microdelay(200);
+7517   }
+7518 }
+7519 
+7520 #define CMOS_STATA   0x0a
+7521 #define CMOS_STATB   0x0b
+7522 #define CMOS_UIP    (1 << 7)        
+7523 
+7524 #define SECS    0x00
+7525 #define MINS    0x02
+7526 #define HOURS   0x04
+7527 #define DAY     0x07
+7528 #define MONTH   0x08
+7529 #define YEAR    0x09
+7530 
+7531 static uint
+7532 cmos_read(uint reg)
+7533 {
+7534   outb(CMOS_PORT,  reg);
+7535   microdelay(200);
+7536 
+7537   return inb(CMOS_RETURN);
+7538 }
+7539 
+7540 static void
+7541 fill_rtcdate(struct rtcdate *r)
+7542 {
+7543   r->second = cmos_read(SECS);
+7544   r->minute = cmos_read(MINS);
+7545   r->hour   = cmos_read(HOURS);
+7546   r->day    = cmos_read(DAY);
+7547   r->month  = cmos_read(MONTH);
+7548   r->year   = cmos_read(YEAR);
+7549 }
+7550 
+7551 void
+7552 cmostime(struct rtcdate *r)
+7553 {
+7554   struct rtcdate t1, t2;
+7555   int sb, bcd;
+7556 
+7557   sb = cmos_read(CMOS_STATB);
+7558 
+7559   bcd = (sb & (1 << 2)) == 0;
+7560 
+7561   
+7562   for(;;) {
+7563     fill_rtcdate(&t1);
+7564     if(cmos_read(CMOS_STATA) & CMOS_UIP)
+7565         continue;
+7566     fill_rtcdate(&t2);
+7567     if(memcmp(&t1, &t2, sizeof(t1)) == 0)
+7568       break;
+7569   }
+7570 
+7571   
+7572   if(bcd) {
+7573 #define    CONV(x)     (t1.x = ((t1.x >> 4) * 10) + (t1.x & 0xf))
+7574     CONV(second);
+7575     CONV(minute);
+7576     CONV(hour  );
+7577     CONV(day   );
+7578     CONV(month );
+7579     CONV(year  );
+7580 #undef     CONV
+7581   }
+7582 
+7583   *r = t1;
+7584   r->year += 2000;
+7585 }
+7586 
+7587 
+7588 
+7589 
+7590 
+7591 
+7592 
+7593 
+7594 
+7595 
+7596 
+7597 
+7598 
+7599 
+7600 
+7601 
+7602 
+7603 
+7604 #include "types.h"
+7605 #include "defs.h"
+7606 #include "traps.h"
+7607 
+7608 #define IOAPIC  0xFEC00000   
+7609 
+7610 #define REG_ID     0x00  
+7611 #define REG_VER    0x01  
+7612 #define REG_TABLE  0x10  
+7613 
+7614 
+7615 
+7616 
+7617 
+7618 
+7619 #define INT_DISABLED   0x00010000  
+7620 #define INT_LEVEL      0x00008000  
+7621 #define INT_ACTIVELOW  0x00002000  
+7622 #define INT_LOGICAL    0x00000800  
+7623 
+7624 volatile struct ioapic *ioapic;
+7625 
+7626 
+7627 struct ioapic {
+7628   uint reg;
+7629   uint pad[3];
+7630   uint data;
+7631 };
+7632 
+7633 static uint
+7634 ioapicread(int reg)
+7635 {
+7636   ioapic->reg = reg;
+7637   return ioapic->data;
+7638 }
+7639 
+7640 static void
+7641 ioapicwrite(int reg, uint data)
+7642 {
+7643   ioapic->reg = reg;
+7644   ioapic->data = data;
+7645 }
+7646 
+7647 
+7648 
+7649 
+7650 void
+7651 ioapicinit(void)
+7652 {
+7653   int i, id, maxintr;
+7654 
+7655   ioapic = (volatile struct ioapic*)IOAPIC;
+7656   maxintr = (ioapicread(REG_VER) >> 16) & 0xFF;
+7657   id = ioapicread(REG_ID) >> 24;
+7658   if(id != ioapicid)
+7659     cprintf("ioapicinit: id isn't equal to ioapicid; not a MP\n");
+7660 
+7661   
+7662   
+7663   for(i = 0; i <= maxintr; i++){
+7664     ioapicwrite(REG_TABLE+2*i, INT_DISABLED | (T_IRQ0 + i));
+7665     ioapicwrite(REG_TABLE+2*i+1, 0);
+7666   }
+7667 }
+7668 
+7669 void
+7670 ioapicenable(int irq, int cpunum)
+7671 {
+7672   
+7673   
+7674   
+7675   ioapicwrite(REG_TABLE+2*irq, T_IRQ0 + irq);
+7676   ioapicwrite(REG_TABLE+2*irq+1, cpunum << 24);
+7677 }
+7678 
+7679 
+7680 
+7681 
+7682 
+7683 
+7684 
+7685 
+7686 
+7687 
+7688 
+7689 
+7690 
+7691 
+7692 
+7693 
+7694 
+7695 
+7696 
+7697 
+7698 
+7699 
+7700 
+7701 
+7702 #define KBSTATP         0x64    
+7703 #define KBS_DIB         0x01    
+7704 #define KBDATAP         0x60    
+7705 
+7706 #define NO              0
+7707 
+7708 #define SHIFT           (1<<0)
+7709 #define CTL             (1<<1)
+7710 #define ALT             (1<<2)
+7711 
+7712 #define CAPSLOCK        (1<<3)
+7713 #define NUMLOCK         (1<<4)
+7714 #define SCROLLLOCK      (1<<5)
+7715 
+7716 #define E0ESC           (1<<6)
+7717 
+7718 
+7719 #define KEY_HOME        0xE0
+7720 #define KEY_END         0xE1
+7721 #define KEY_UP          0xE2
+7722 #define KEY_DN          0xE3
+7723 #define KEY_LF          0xE4
+7724 #define KEY_RT          0xE5
+7725 #define KEY_PGUP        0xE6
+7726 #define KEY_PGDN        0xE7
+7727 #define KEY_INS         0xE8
+7728 #define KEY_DEL         0xE9
+7729 
+7730 
+7731 #define C(x) (x - '@')
+7732 
+7733 static uchar shiftcode[256] =
+7734 {
+7735   [0x1D] CTL,
+7736   [0x2A] SHIFT,
+7737   [0x36] SHIFT,
+7738   [0x38] ALT,
+7739   [0x9D] CTL,
+7740   [0xB8] ALT
+7741 };
+7742 
+7743 static uchar togglecode[256] =
+7744 {
+7745   [0x3A] CAPSLOCK,
+7746   [0x45] NUMLOCK,
+7747   [0x46] SCROLLLOCK
+7748 };
+7749 
+7750 static uchar normalmap[256] =
+7751 {
+7752   NO,   0x1B, '1',  '2',  '3',  '4',  '5',  '6',  
+7753   '7',  '8',  '9',  '0',  '-',  '=',  '\b', '\t',
+7754   'q',  'w',  'e',  'r',  't',  'y',  'u',  'i',  
+7755   'o',  'p',  '[',  ']',  '\n', NO,   'a',  's',
+7756   'd',  'f',  'g',  'h',  'j',  'k',  'l',  ';',  
+7757   '\'', '`',  NO,   '\\', 'z',  'x',  'c',  'v',
+7758   'b',  'n',  'm',  ',',  '.',  '/',  NO,   '*',  
+7759   NO,   ' ',  NO,   NO,   NO,   NO,   NO,   NO,
+7760   NO,   NO,   NO,   NO,   NO,   NO,   NO,   '7',  
+7761   '8',  '9',  '-',  '4',  '5',  '6',  '+',  '1',
+7762   '2',  '3',  '0',  '.',  NO,   NO,   NO,   NO,   
+7763   [0x9C] '\n',      
+7764   [0xB5] '/',       
+7765   [0xC8] KEY_UP,    [0xD0] KEY_DN,
+7766   [0xC9] KEY_PGUP,  [0xD1] KEY_PGDN,
+7767   [0xCB] KEY_LF,    [0xCD] KEY_RT,
+7768   [0x97] KEY_HOME,  [0xCF] KEY_END,
+7769   [0xD2] KEY_INS,   [0xD3] KEY_DEL
+7770 };
+7771 
+7772 static uchar shiftmap[256] =
+7773 {
+7774   NO,   033,  '!',  '@',  '#',  '$',  '%',  '^',  
+7775   '&',  '*',  '(',  ')',  '_',  '+',  '\b', '\t',
+7776   'Q',  'W',  'E',  'R',  'T',  'Y',  'U',  'I',  
+7777   'O',  'P',  '{',  '}',  '\n', NO,   'A',  'S',
+7778   'D',  'F',  'G',  'H',  'J',  'K',  'L',  ':',  
+7779   '"',  '~',  NO,   '|',  'Z',  'X',  'C',  'V',
+7780   'B',  'N',  'M',  '<',  '>',  '?',  NO,   '*',  
+7781   NO,   ' ',  NO,   NO,   NO,   NO,   NO,   NO,
+7782   NO,   NO,   NO,   NO,   NO,   NO,   NO,   '7',  
+7783   '8',  '9',  '-',  '4',  '5',  '6',  '+',  '1',
+7784   '2',  '3',  '0',  '.',  NO,   NO,   NO,   NO,   
+7785   [0x9C] '\n',      
+7786   [0xB5] '/',       
+7787   [0xC8] KEY_UP,    [0xD0] KEY_DN,
+7788   [0xC9] KEY_PGUP,  [0xD1] KEY_PGDN,
+7789   [0xCB] KEY_LF,    [0xCD] KEY_RT,
+7790   [0x97] KEY_HOME,  [0xCF] KEY_END,
+7791   [0xD2] KEY_INS,   [0xD3] KEY_DEL
+7792 };
+7793 
+7794 
+7795 
+7796 
+7797 
+7798 
+7799 
+7800 static uchar ctlmap[256] =
+7801 {
+7802   NO,      NO,      NO,      NO,      NO,      NO,      NO,      NO,
+7803   NO,      NO,      NO,      NO,      NO,      NO,      NO,      NO,
+7804   C('Q'),  C('W'),  C('E'),  C('R'),  C('T'),  C('Y'),  C('U'),  C('I'),
+7805   C('O'),  C('P'),  NO,      NO,      '\r',    NO,      C('A'),  C('S'),
+7806   C('D'),  C('F'),  C('G'),  C('H'),  C('J'),  C('K'),  C('L'),  NO,
+7807   NO,      NO,      NO,      C('\\'), C('Z'),  C('X'),  C('C'),  C('V'),
+7808   C('B'),  C('N'),  C('M'),  NO,      NO,      C('/'),  NO,      NO,
+7809   [0x9C] '\r',      
+7810   [0xB5] C('/'),    
+7811   [0xC8] KEY_UP,    [0xD0] KEY_DN,
+7812   [0xC9] KEY_PGUP,  [0xD1] KEY_PGDN,
+7813   [0xCB] KEY_LF,    [0xCD] KEY_RT,
+7814   [0x97] KEY_HOME,  [0xCF] KEY_END,
+7815   [0xD2] KEY_INS,   [0xD3] KEY_DEL
+7816 };
+7817 
+7818 
+7819 
+7820 
+7821 
+7822 
+7823 
+7824 
+7825 
+7826 
+7827 
+7828 
+7829 
+7830 
+7831 
+7832 
+7833 
+7834 
+7835 
+7836 
+7837 
+7838 
+7839 
+7840 
+7841 
+7842 
+7843 
+7844 
+7845 
+7846 
+7847 
+7848 
+7849 
+7850 #include "types.h"
+7851 #include "x86.h"
+7852 #include "defs.h"
+7853 #include "kbd.h"
+7854 
+7855 int
+7856 kbdgetc(void)
+7857 {
+7858   static uint shift;
+7859   static uchar *charcode[4] = {
+7860     normalmap, shiftmap, ctlmap, ctlmap
+7861   };
+7862   uint st, data, c;
+7863 
+7864   st = inb(KBSTATP);
+7865   if((st & KBS_DIB) == 0)
+7866     return -1;
+7867   data = inb(KBDATAP);
+7868 
+7869   if(data == 0xE0){
+7870     shift |= E0ESC;
+7871     return 0;
+7872   } else if(data & 0x80){
+7873     
+7874     data = (shift & E0ESC ? data : data & 0x7F);
+7875     shift &= ~(shiftcode[data] | E0ESC);
+7876     return 0;
+7877   } else if(shift & E0ESC){
+7878     
+7879     data |= 0x80;
+7880     shift &= ~E0ESC;
+7881   }
+7882 
+7883   shift |= shiftcode[data];
+7884   shift ^= togglecode[data];
+7885   c = charcode[shift & (CTL | SHIFT)][data];
+7886   if(shift & CAPSLOCK){
+7887     if('a' <= c && c <= 'z')
+7888       c += 'A' - 'a';
+7889     else if('A' <= c && c <= 'Z')
+7890       c += 'a' - 'A';
+7891   }
+7892   return c;
+7893 }
+7894 
+7895 void
+7896 kbdintr(void)
+7897 {
+7898   consoleintr(kbdgetc);
+7899 }
+7900 
+7901 
+7902 
+7903 
+7904 #include "types.h"
+7905 #include "defs.h"
+7906 #include "param.h"
+7907 #include "traps.h"
+7908 #include "spinlock.h"
+7909 #include "sleeplock.h"
+7910 #include "fs.h"
+7911 #include "file.h"
+7912 #include "memlayout.h"
+7913 #include "mmu.h"
+7914 #include "proc.h"
+7915 #include "x86.h"
+7916 
+7917 static void consputc(int);
+7918 
+7919 static int panicked = 0;
+7920 
+7921 static struct {
+7922   struct spinlock lock;
+7923   int locking;
+7924 } cons;
+7925 
+7926 static void
+7927 printint(int xx, int base, int sign)
+7928 {
+7929   static char digits[] = "0123456789abcdef";
+7930   char buf[16];
+7931   int i;
+7932   uint x;
+7933 
+7934   if(sign && (sign = xx < 0))
+7935     x = -xx;
+7936   else
+7937     x = xx;
+7938 
+7939   i = 0;
+7940   do{
+7941     buf[i++] = digits[x % base];
+7942   }while((x /= base) != 0);
+7943 
+7944   if(sign)
+7945     buf[i++] = '-';
+7946 
+7947   while(--i >= 0)
+7948     consputc(buf[i]);
+7949 }
+7950 
+7951 
+7952 
+7953 
+7954 
+7955 
+7956 
+7957 
+7958 
+7959 
+7960 
+7961 
+7962 
+7963 
+7964 
+7965 
+7966 
+7967 
+7968 
+7969 
+7970 
+7971 
+7972 
+7973 
+7974 
+7975 
+7976 
+7977 
+7978 
+7979 
+7980 
+7981 
+7982 
+7983 
+7984 
+7985 
+7986 
+7987 
+7988 
+7989 
+7990 
+7991 
+7992 
+7993 
+7994 
+7995 
+7996 
+7997 
+7998 
+7999 
+8000 
+8001 void
+8002 cprintf(char *fmt, ...)
+8003 {
+8004   int i, c, locking;
+8005   uint *argp;
+8006   char *s;
+8007 
+8008   locking = cons.locking;
+8009   if(locking)
+8010     acquire(&cons.lock);
+8011 
+8012   if (fmt == 0)
+8013     panic("null fmt");
+8014 
+8015   argp = (uint*)(void*)(&fmt + 1);
+8016   for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
+8017     if(c != '%'){
+8018       consputc(c);
+8019       continue;
+8020     }
+8021     c = fmt[++i] & 0xff;
+8022     if(c == 0)
+8023       break;
+8024     switch(c){
+8025     case 'd':
+8026       printint(*argp++, 10, 1);
+8027       break;
+8028     case 'x':
+8029     case 'p':
+8030       printint(*argp++, 16, 0);
+8031       break;
+8032     case 's':
+8033       if((s = (char*)*argp++) == 0)
+8034         s = "(null)";
+8035       for(; *s; s++)
+8036         consputc(*s);
+8037       break;
+8038     case '%':
+8039       consputc('%');
+8040       break;
+8041     default:
+8042       
+8043       consputc('%');
+8044       consputc(c);
+8045       break;
+8046     }
+8047   }
+8048 
+8049 
+8050   if(locking)
+8051     release(&cons.lock);
+8052 }
+8053 
+8054 void
+8055 panic(char *s)
+8056 {
+8057   int i;
+8058   uint pcs[10];
+8059 
+8060   cli();
+8061   cons.locking = 0;
+8062   
+8063   cprintf("lapicid %d: panic: ", lapicid());
+8064   cprintf(s);
+8065   cprintf("\n");
+8066   getcallerpcs(&s, pcs);
+8067   for(i=0; i<10; i++)
+8068     cprintf(" %p", pcs[i]);
+8069   panicked = 1; 
+8070   for(;;)
+8071     ;
+8072 }
+8073 
+8074 
+8075 
+8076 
+8077 
+8078 
+8079 
+8080 
+8081 
+8082 
+8083 
+8084 
+8085 
+8086 
+8087 
+8088 
+8089 
+8090 
+8091 
+8092 
+8093 
+8094 
+8095 
+8096 
+8097 
+8098 
+8099 
+8100 #define BACKSPACE 0x100
+8101 #define CRTPORT 0x3d4
+8102 static ushort *crt = (ushort*)P2V(0xb8000);  
+8103 
+8104 static void
+8105 cgaputc(int c)
+8106 {
+8107   int pos;
+8108 
+8109   
+8110   outb(CRTPORT, 14);
+8111   pos = inb(CRTPORT+1) << 8;
+8112   outb(CRTPORT, 15);
+8113   pos |= inb(CRTPORT+1);
+8114 
+8115   if(c == '\n')
+8116     pos += 80 - pos%80;
+8117   else if(c == BACKSPACE){
+8118     if(pos > 0) --pos;
+8119   } else
+8120     crt[pos++] = (c&0xff) | 0x0700;  
+8121 
+8122   if(pos < 0 || pos > 25*80)
+8123     panic("pos under/overflow");
+8124 
+8125   if((pos/80) >= 24){  
+8126     memmove(crt, crt+80, sizeof(crt[0])*23*80);
+8127     pos -= 80;
+8128     memset(crt+pos, 0, sizeof(crt[0])*(24*80 - pos));
+8129   }
+8130 
+8131   outb(CRTPORT, 14);
+8132   outb(CRTPORT+1, pos>>8);
+8133   outb(CRTPORT, 15);
+8134   outb(CRTPORT+1, pos);
+8135   crt[pos] = ' ' | 0x0700;
+8136 }
+8137 
+8138 
+8139 
+8140 
+8141 
+8142 
+8143 
+8144 
+8145 
+8146 
+8147 
+8148 
+8149 
+8150 void
+8151 consputc(int c)
+8152 {
+8153   if(panicked){
+8154     cli();
+8155     for(;;)
+8156       ;
+8157   }
+8158 
+8159   if(c == BACKSPACE){
+8160     uartputc('\b'); uartputc(' '); uartputc('\b');
+8161   } else
+8162     uartputc(c);
+8163   cgaputc(c);
+8164 }
+8165 
+8166 #define INPUT_BUF 128
+8167 struct {
+8168   char buf[INPUT_BUF];
+8169   uint r;  
+8170   uint w;  
+8171   uint e;  
+8172 } input;
+8173 
+8174 #define C(x)  ((x)-'@')  
+8175 
+8176 void
+8177 consoleintr(int (*getc)(void))
+8178 {
+8179   int c, doprocdump = 0;
+8180 
+8181   acquire(&cons.lock);
+8182   while((c = getc()) >= 0){
+8183     switch(c){
+8184     case C('P'):  
+8185       
+8186       doprocdump = 1;
+8187       break;
+8188     case C('U'):  
+8189       while(input.e != input.w &&
+8190             input.buf[(input.e-1) % INPUT_BUF] != '\n'){
+8191         input.e--;
+8192         consputc(BACKSPACE);
+8193       }
+8194       break;
+8195     case C('H'): case '\x7f':  
+8196       if(input.e != input.w){
+8197         input.e--;
+8198         consputc(BACKSPACE);
+8199       }
+8200       break;
+8201     default:
+8202       if(c != 0 && input.e-input.r < INPUT_BUF){
+8203         c = (c == '\r') ? '\n' : c;
+8204         input.buf[input.e++ % INPUT_BUF] = c;
+8205         consputc(c);
+8206         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
+8207           input.w = input.e;
+8208           wakeup(&input.r);
+8209         }
+8210       }
+8211       break;
+8212     }
+8213   }
+8214   release(&cons.lock);
+8215   if(doprocdump) {
+8216     procdump();  
+8217   }
+8218 }
+8219 
+8220 int
+8221 consoleread(struct inode *ip, char *dst, int n)
+8222 {
+8223   uint target;
+8224   int c;
+8225 
+8226   iunlock(ip);
+8227   target = n;
+8228   acquire(&cons.lock);
+8229   while(n > 0){
+8230     while(input.r == input.w){
+8231       if(myproc()->killed){
+8232         release(&cons.lock);
+8233         ilock(ip);
+8234         return -1;
+8235       }
+8236       sleep(&input.r, &cons.lock);
+8237     }
+8238     c = input.buf[input.r++ % INPUT_BUF];
+8239     if(c == C('D')){  
+8240       if(n < target){
+8241         
+8242         
+8243         input.r--;
+8244       }
+8245       break;
+8246     }
+8247     *dst++ = c;
+8248     --n;
+8249     if(c == '\n')
+8250       break;
+8251   }
+8252   release(&cons.lock);
+8253   ilock(ip);
+8254 
+8255   return target - n;
+8256 }
+8257 
+8258 int
+8259 consolewrite(struct inode *ip, char *buf, int n)
+8260 {
+8261   int i;
+8262 
+8263   iunlock(ip);
+8264   acquire(&cons.lock);
+8265   for(i = 0; i < n; i++)
+8266     consputc(buf[i] & 0xff);
+8267   release(&cons.lock);
+8268   ilock(ip);
+8269 
+8270   return n;
+8271 }
+8272 
+8273 void
+8274 consoleinit(void)
+8275 {
+8276   initlock(&cons.lock, "console");
+8277 
+8278   devsw[CONSOLE].write = consolewrite;
+8279   devsw[CONSOLE].read = consoleread;
+8280   cons.locking = 1;
+8281 
+8282   ioapicenable(IRQ_KBD, 0);
+8283 }
+8284 
+8285 
+8286 
+8287 
+8288 
+8289 
+8290 
+8291 
+8292 
+8293 
+8294 
+8295 
+8296 
+8297 
+8298 
+8299 
+8300 
+8301 
+8302 #include "types.h"
+8303 #include "defs.h"
+8304 #include "param.h"
+8305 #include "traps.h"
+8306 #include "spinlock.h"
+8307 #include "sleeplock.h"
+8308 #include "fs.h"
+8309 #include "file.h"
+8310 #include "mmu.h"
+8311 #include "proc.h"
+8312 #include "x86.h"
+8313 
+8314 #define COM1    0x3f8
+8315 
+8316 static int uart;    
+8317 
+8318 void
+8319 uartinit(void)
+8320 {
+8321   char *p;
+8322 
+8323   
+8324   outb(COM1+2, 0);
+8325 
+8326   
+8327   outb(COM1+3, 0x80);    
+8328   outb(COM1+0, 115200/9600);
+8329   outb(COM1+1, 0);
+8330   outb(COM1+3, 0x03);    
+8331   outb(COM1+4, 0);
+8332   outb(COM1+1, 0x01);    
+8333 
+8334   
+8335   if(inb(COM1+5) == 0xFF)
+8336     return;
+8337   uart = 1;
+8338 
+8339   
+8340   
+8341   inb(COM1+2);
+8342   inb(COM1+0);
+8343   ioapicenable(IRQ_COM1, 0);
+8344 
+8345   
+8346   for(p="xv6...\n"; *p; p++)
+8347     uartputc(*p);
+8348 }
+8349 
+8350 void
+8351 uartputc(int c)
+8352 {
+8353   int i;
+8354 
+8355   if(!uart)
+8356     return;
+8357   for(i = 0; i < 128 && !(inb(COM1+5) & 0x20); i++)
+8358     microdelay(10);
+8359   outb(COM1+0, c);
+8360 }
+8361 
+8362 static int
+8363 uartgetc(void)
+8364 {
+8365   if(!uart)
+8366     return -1;
+8367   if(!(inb(COM1+5) & 0x01))
+8368     return -1;
+8369   return inb(COM1+0);
+8370 }
+8371 
+8372 void
+8373 uartintr(void)
+8374 {
+8375   consoleintr(uartgetc);
+8376 }
+8377 
+8378 
+8379 
+8380 
+8381 
+8382 
+8383 
+8384 
+8385 
+8386 
+8387 
+8388 
+8389 
+8390 
+8391 
+8392 
+8393 
+8394 
+8395 
+8396 
+8397 
+8398 
+8399 
+8400 
+8401 
+8402 
+8403 
+8404 
+8405 
+8406 
+8407 
+8408 .globl start
+8409 start:
+8410   pushl $argv
+8411   pushl $init
+8412   pushl $0  
+8413   movl $SYS_exec, %eax
+8414   int $T_SYSCALL
+8415 
+8416 
+8417 exit:
+8418   movl $SYS_exit, %eax
+8419   int $T_SYSCALL
+8420   jmp exit
+8421 
+8422 
+8423 init:
+8424   .string "/init\0"
+8425 
+8426 
+8427 .p2align 2
+8428 argv:
+8429   .long init
+8430   .long 0
+8431 
+8432 
+8433 
+8434 
+8435 
+8436 
+8437 
+8438 
+8439 
+8440 
+8441 
+8442 
+8443 
+8444 
+8445 
+8446 
+8447 
+8448 
+8449 
+8450 
+8451 
+8452 
+8453 
+8454   .globl name; \
+8455   name: \
+8456     movl $SYS_ 
+8457     int $T_SYSCALL; \
+8458     ret
+8459 
+8460 SYSCALL(fork)
+8461 SYSCALL(exit)
+8462 SYSCALL(wait)
+8463 SYSCALL(pipe)
+8464 SYSCALL(read)
+8465 SYSCALL(write)
+8466 SYSCALL(close)
+8467 SYSCALL(kill)
+8468 SYSCALL(exec)
+8469 SYSCALL(open)
+8470 SYSCALL(mknod)
+8471 SYSCALL(unlink)
+8472 SYSCALL(fstat)
+8473 SYSCALL(link)
+8474 SYSCALL(mkdir)
+8475 SYSCALL(chdir)
+8476 SYSCALL(dup)
+8477 SYSCALL(getpid)
+8478 SYSCALL(sbrk)
+8479 SYSCALL(sleep)
+8480 SYSCALL(uptime)
+8481 
+8482 
+8483 
+8484 
+8485 
+8486 
+8487 
+8488 
+8489 
+8490 
+8491 
+8492 
+8493 
+8494 
+8495 
+8496 
+8497 
+8498 
+8499 
+8500 
+8501 
+8502 #include "types.h"
+8503 #include "stat.h"
+8504 #include "user.h"
+8505 #include "fcntl.h"
+8506 
+8507 char *argv[] = { "sh", 0 };
+8508 
+8509 int
+8510 main(void)
+8511 {
+8512   int pid, wpid;
+8513 
+8514   if(open("console", O_RDWR) < 0){
+8515     mknod("console", 1, 1);
+8516     open("console", O_RDWR);
+8517   }
+8518   dup(0);  
+8519   dup(0);  
+8520 
+8521   for(;;){
+8522     printf(1, "init: starting sh\n");
+8523     pid = fork();
+8524     if(pid < 0){
+8525       printf(1, "init: fork failed\n");
+8526       exit();
+8527     }
+8528     if(pid == 0){
+8529       exec("sh", argv);
+8530       printf(1, "init: exec sh failed\n");
+8531       exit();
+8532     }
+8533     while((wpid=wait()) >= 0 && wpid != pid)
+8534       printf(1, "zombie!\n");
+8535   }
+8536 }
+8537 
+8538 
+8539 
+8540 
+8541 
+8542 
+8543 
+8544 
+8545 
+8546 
+8547 
+8548 
+8549 
+8550 
+8551 
+8552 #include "types.h"
+8553 #include "user.h"
+8554 #include "fcntl.h"
+8555 
+8556 
+8557 #define EXEC  1
+8558 #define REDIR 2
+8559 #define PIPE  3
+8560 #define LIST  4
+8561 #define BACK  5
+8562 
+8563 #define MAXARGS 10
+8564 
+8565 struct cmd {
+8566   int type;
+8567 };
+8568 
+8569 struct execcmd {
+8570   int type;
+8571   char *argv[MAXARGS];
+8572   char *eargv[MAXARGS];
+8573 };
+8574 
+8575 struct redircmd {
+8576   int type;
+8577   struct cmd *cmd;
+8578   char *file;
+8579   char *efile;
+8580   int mode;
+8581   int fd;
+8582 };
+8583 
+8584 struct pipecmd {
+8585   int type;
+8586   struct cmd *left;
+8587   struct cmd *right;
+8588 };
+8589 
+8590 struct listcmd {
+8591   int type;
+8592   struct cmd *left;
+8593   struct cmd *right;
+8594 };
+8595 
+8596 struct backcmd {
+8597   int type;
+8598   struct cmd *cmd;
+8599 };
+8600 int fork1(void);  
+8601 void panic(char*);
+8602 struct cmd *parsecmd(char*);
+8603 
+8604 
+8605 void
+8606 runcmd(struct cmd *cmd)
+8607 {
+8608   int p[2];
+8609   struct backcmd *bcmd;
+8610   struct execcmd *ecmd;
+8611   struct listcmd *lcmd;
+8612   struct pipecmd *pcmd;
+8613   struct redircmd *rcmd;
+8614 
+8615   if(cmd == 0)
+8616     exit();
+8617 
+8618   switch(cmd->type){
+8619   default:
+8620     panic("runcmd");
+8621 
+8622   case EXEC:
+8623     ecmd = (struct execcmd*)cmd;
+8624     if(ecmd->argv[0] == 0)
+8625       exit();
+8626     exec(ecmd->argv[0], ecmd->argv);
+8627     printf(2, "exec %s failed\n", ecmd->argv[0]);
+8628     break;
+8629 
+8630   case REDIR:
+8631     rcmd = (struct redircmd*)cmd;
+8632     close(rcmd->fd);
+8633     if(open(rcmd->file, rcmd->mode) < 0){
+8634       printf(2, "open %s failed\n", rcmd->file);
+8635       exit();
+8636     }
+8637     runcmd(rcmd->cmd);
+8638     break;
+8639 
+8640   case LIST:
+8641     lcmd = (struct listcmd*)cmd;
+8642     if(fork1() == 0)
+8643       runcmd(lcmd->left);
+8644     wait();
+8645     runcmd(lcmd->right);
+8646     break;
+8647 
+8648 
+8649 
+8650   case PIPE:
+8651     pcmd = (struct pipecmd*)cmd;
+8652     if(pipe(p) < 0)
+8653       panic("pipe");
+8654     if(fork1() == 0){
+8655       close(1);
+8656       dup(p[1]);
+8657       close(p[0]);
+8658       close(p[1]);
+8659       runcmd(pcmd->left);
+8660     }
+8661     if(fork1() == 0){
+8662       close(0);
+8663       dup(p[0]);
+8664       close(p[0]);
+8665       close(p[1]);
+8666       runcmd(pcmd->right);
+8667     }
+8668     close(p[0]);
+8669     close(p[1]);
+8670     wait();
+8671     wait();
+8672     break;
+8673 
+8674   case BACK:
+8675     bcmd = (struct backcmd*)cmd;
+8676     if(fork1() == 0)
+8677       runcmd(bcmd->cmd);
+8678     break;
+8679   }
+8680   exit();
+8681 }
+8682 
+8683 int
+8684 getcmd(char *buf, int nbuf)
+8685 {
+8686   printf(2, "$ ");
+8687   memset(buf, 0, nbuf);
+8688   gets(buf, nbuf);
+8689   if(buf[0] == 0) 
+8690     return -1;
+8691   return 0;
+8692 }
+8693 
+8694 
+8695 
+8696 
+8697 
+8698 
+8699 
+8700 int
+8701 main(void)
+8702 {
+8703   static char buf[100];
+8704   int fd;
+8705 
+8706   
+8707   while((fd = open("console", O_RDWR)) >= 0){
+8708     if(fd >= 3){
+8709       close(fd);
+8710       break;
+8711     }
+8712   }
+8713 
+8714   
+8715   while(getcmd(buf, sizeof(buf)) >= 0){
+8716     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
+8717       
+8718       buf[strlen(buf)-1] = 0;  
+8719       if(chdir(buf+3) < 0)
+8720         printf(2, "cannot cd %s\n", buf+3);
+8721       continue;
+8722     }
+8723     if(fork1() == 0)
+8724       runcmd(parsecmd(buf));
+8725     wait();
+8726   }
+8727   exit();
+8728 }
+8729 
+8730 void
+8731 panic(char *s)
+8732 {
+8733   printf(2, "%s\n", s);
+8734   exit();
+8735 }
+8736 
+8737 int
+8738 fork1(void)
+8739 {
+8740   int pid;
+8741 
+8742   pid = fork();
+8743   if(pid == -1)
+8744     panic("fork");
+8745   return pid;
+8746 }
+8747 
+8748 
+8749 
+8750 
+8751 
+8752 struct cmd*
+8753 execcmd(void)
+8754 {
+8755   struct execcmd *cmd;
+8756 
+8757   cmd = malloc(sizeof(*cmd));
+8758   memset(cmd, 0, sizeof(*cmd));
+8759   cmd->type = EXEC;
+8760   return (struct cmd*)cmd;
+8761 }
+8762 
+8763 struct cmd*
+8764 redircmd(struct cmd *subcmd, char *file, char *efile, int mode, int fd)
+8765 {
+8766   struct redircmd *cmd;
+8767 
+8768   cmd = malloc(sizeof(*cmd));
+8769   memset(cmd, 0, sizeof(*cmd));
+8770   cmd->type = REDIR;
+8771   cmd->cmd = subcmd;
+8772   cmd->file = file;
+8773   cmd->efile = efile;
+8774   cmd->mode = mode;
+8775   cmd->fd = fd;
+8776   return (struct cmd*)cmd;
+8777 }
+8778 
+8779 struct cmd*
+8780 pipecmd(struct cmd *left, struct cmd *right)
+8781 {
+8782   struct pipecmd *cmd;
+8783 
+8784   cmd = malloc(sizeof(*cmd));
+8785   memset(cmd, 0, sizeof(*cmd));
+8786   cmd->type = PIPE;
+8787   cmd->left = left;
+8788   cmd->right = right;
+8789   return (struct cmd*)cmd;
+8790 }
+8791 
+8792 
+8793 
+8794 
+8795 
+8796 
+8797 
+8798 
+8799 
+8800 struct cmd*
+8801 listcmd(struct cmd *left, struct cmd *right)
+8802 {
+8803   struct listcmd *cmd;
+8804 
+8805   cmd = malloc(sizeof(*cmd));
+8806   memset(cmd, 0, sizeof(*cmd));
+8807   cmd->type = LIST;
+8808   cmd->left = left;
+8809   cmd->right = right;
+8810   return (struct cmd*)cmd;
+8811 }
+8812 
+8813 struct cmd*
+8814 backcmd(struct cmd *subcmd)
+8815 {
+8816   struct backcmd *cmd;
+8817 
+8818   cmd = malloc(sizeof(*cmd));
+8819   memset(cmd, 0, sizeof(*cmd));
+8820   cmd->type = BACK;
+8821   cmd->cmd = subcmd;
+8822   return (struct cmd*)cmd;
+8823 }
+8824 
+8825 
+8826 
+8827 
+8828 
+8829 
+8830 
+8831 
+8832 
+8833 
+8834 
+8835 
+8836 
+8837 
+8838 
+8839 
+8840 
+8841 
+8842 
+8843 
+8844 
+8845 
+8846 
+8847 
+8848 
+8849 
+8850 
+8851 
+8852 char whitespace[] = " \t\r\n\v";
+8853 char symbols[] = "<|>&;()";
+8854 
+8855 int
+8856 gettoken(char **ps, char *es, char **q, char **eq)
+8857 {
+8858   char *s;
+8859   int ret;
+8860 
+8861   s = *ps;
+8862   while(s < es && strchr(whitespace, *s))
+8863     s++;
+8864   if(q)
+8865     *q = s;
+8866   ret = *s;
+8867   switch(*s){
+8868   case 0:
+8869     break;
+8870   case '|':
+8871   case '(':
+8872   case ')':
+8873   case ';':
+8874   case '&':
+8875   case '<':
+8876     s++;
+8877     break;
+8878   case '>':
+8879     s++;
+8880     if(*s == '>'){
+8881       ret = '+';
+8882       s++;
+8883     }
+8884     break;
+8885   default:
+8886     ret = 'a';
+8887     while(s < es && !strchr(whitespace, *s) && !strchr(symbols, *s))
+8888       s++;
+8889     break;
+8890   }
+8891   if(eq)
+8892     *eq = s;
+8893 
+8894   while(s < es && strchr(whitespace, *s))
+8895     s++;
+8896   *ps = s;
+8897   return ret;
+8898 }
+8899 
+8900 int
+8901 peek(char **ps, char *es, char *toks)
+8902 {
+8903   char *s;
+8904 
+8905   s = *ps;
+8906   while(s < es && strchr(whitespace, *s))
+8907     s++;
+8908   *ps = s;
+8909   return *s && strchr(toks, *s);
+8910 }
+8911 
+8912 struct cmd *parseline(char**, char*);
+8913 struct cmd *parsepipe(char**, char*);
+8914 struct cmd *parseexec(char**, char*);
+8915 struct cmd *nulterminate(struct cmd*);
+8916 
+8917 struct cmd*
+8918 parsecmd(char *s)
+8919 {
+8920   char *es;
+8921   struct cmd *cmd;
+8922 
+8923   es = s + strlen(s);
+8924   cmd = parseline(&s, es);
+8925   peek(&s, es, "");
+8926   if(s != es){
+8927     printf(2, "leftovers: %s\n", s);
+8928     panic("syntax");
+8929   }
+8930   nulterminate(cmd);
+8931   return cmd;
+8932 }
+8933 
+8934 struct cmd*
+8935 parseline(char **ps, char *es)
+8936 {
+8937   struct cmd *cmd;
+8938 
+8939   cmd = parsepipe(ps, es);
+8940   while(peek(ps, es, "&")){
+8941     gettoken(ps, es, 0, 0);
+8942     cmd = backcmd(cmd);
+8943   }
+8944   if(peek(ps, es, ";")){
+8945     gettoken(ps, es, 0, 0);
+8946     cmd = listcmd(cmd, parseline(ps, es));
+8947   }
+8948   return cmd;
+8949 }
+8950 struct cmd*
+8951 parsepipe(char **ps, char *es)
+8952 {
+8953   struct cmd *cmd;
+8954 
+8955   cmd = parseexec(ps, es);
+8956   if(peek(ps, es, "|")){
+8957     gettoken(ps, es, 0, 0);
+8958     cmd = pipecmd(cmd, parsepipe(ps, es));
+8959   }
+8960   return cmd;
+8961 }
+8962 
+8963 struct cmd*
+8964 parseredirs(struct cmd *cmd, char **ps, char *es)
+8965 {
+8966   int tok;
+8967   char *q, *eq;
+8968 
+8969   while(peek(ps, es, "<>")){
+8970     tok = gettoken(ps, es, 0, 0);
+8971     if(gettoken(ps, es, &q, &eq) != 'a')
+8972       panic("missing file for redirection");
+8973     switch(tok){
+8974     case '<':
+8975       cmd = redircmd(cmd, q, eq, O_RDONLY, 0);
+8976       break;
+8977     case '>':
+8978       cmd = redircmd(cmd, q, eq, O_WRONLY|O_CREATE, 1);
+8979       break;
+8980     case '+':  
+8981       cmd = redircmd(cmd, q, eq, O_WRONLY|O_CREATE, 1);
+8982       break;
+8983     }
+8984   }
+8985   return cmd;
+8986 }
+8987 
+8988 
+8989 
+8990 
+8991 
+8992 
+8993 
+8994 
+8995 
+8996 
+8997 
+8998 
+8999 
+9000 struct cmd*
+9001 parseblock(char **ps, char *es)
+9002 {
+9003   struct cmd *cmd;
+9004 
+9005   if(!peek(ps, es, "("))
+9006     panic("parseblock");
+9007   gettoken(ps, es, 0, 0);
+9008   cmd = parseline(ps, es);
+9009   if(!peek(ps, es, ")"))
+9010     panic("syntax - missing )");
+9011   gettoken(ps, es, 0, 0);
+9012   cmd = parseredirs(cmd, ps, es);
+9013   return cmd;
+9014 }
+9015 
+9016 struct cmd*
+9017 parseexec(char **ps, char *es)
+9018 {
+9019   char *q, *eq;
+9020   int tok, argc;
+9021   struct execcmd *cmd;
+9022   struct cmd *ret;
+9023 
+9024   if(peek(ps, es, "("))
+9025     return parseblock(ps, es);
+9026 
+9027   ret = execcmd();
+9028   cmd = (struct execcmd*)ret;
+9029 
+9030   argc = 0;
+9031   ret = parseredirs(ret, ps, es);
+9032   while(!peek(ps, es, "|)&;")){
+9033     if((tok=gettoken(ps, es, &q, &eq)) == 0)
+9034       break;
+9035     if(tok != 'a')
+9036       panic("syntax");
+9037     cmd->argv[argc] = q;
+9038     cmd->eargv[argc] = eq;
+9039     argc++;
+9040     if(argc >= MAXARGS)
+9041       panic("too many args");
+9042     ret = parseredirs(ret, ps, es);
+9043   }
+9044   cmd->argv[argc] = 0;
+9045   cmd->eargv[argc] = 0;
+9046   return ret;
+9047 }
+9048 
+9049 
+9050 
+9051 struct cmd*
+9052 nulterminate(struct cmd *cmd)
+9053 {
+9054   int i;
+9055   struct backcmd *bcmd;
+9056   struct execcmd *ecmd;
+9057   struct listcmd *lcmd;
+9058   struct pipecmd *pcmd;
+9059   struct redircmd *rcmd;
+9060 
+9061   if(cmd == 0)
+9062     return 0;
+9063 
+9064   switch(cmd->type){
+9065   case EXEC:
+9066     ecmd = (struct execcmd*)cmd;
+9067     for(i=0; ecmd->argv[i]; i++)
+9068       *ecmd->eargv[i] = 0;
+9069     break;
+9070 
+9071   case REDIR:
+9072     rcmd = (struct redircmd*)cmd;
+9073     nulterminate(rcmd->cmd);
+9074     *rcmd->efile = 0;
+9075     break;
+9076 
+9077   case PIPE:
+9078     pcmd = (struct pipecmd*)cmd;
+9079     nulterminate(pcmd->left);
+9080     nulterminate(pcmd->right);
+9081     break;
+9082 
+9083   case LIST:
+9084     lcmd = (struct listcmd*)cmd;
+9085     nulterminate(lcmd->left);
+9086     nulterminate(lcmd->right);
+9087     break;
+9088 
+9089   case BACK:
+9090     bcmd = (struct backcmd*)cmd;
+9091     nulterminate(bcmd->cmd);
+9092     break;
+9093   }
+9094   return cmd;
+9095 }
+9096 
+9097 
+9098 
+9099 
+9100 
+9101 
+9102 
+9103 
+9104 
+9105 
+9106 
+9107 
+9108 
+9109 .code16                       
+9110 .globl start
+9111 start:
+9112   cli                         
+9113 
+9114   
+9115   xorw    %ax,%ax             
+9116   movw    %ax,%ds             
+9117   movw    %ax,%es             
+9118   movw    %ax,%ss             
+9119 
+9120   
+9121   
+9122 seta20.1:
+9123   inb     $0x64,%al               
+9124   testb   $0x2,%al
+9125   jnz     seta20.1
+9126 
+9127   movb    $0xd1,%al               
+9128   outb    %al,$0x64
+9129 
+9130 seta20.2:
+9131   inb     $0x64,%al               
+9132   testb   $0x2,%al
+9133   jnz     seta20.2
+9134 
+9135   movb    $0xdf,%al               
+9136   outb    %al,$0x60
+9137 
+9138   
+9139   
+9140   
+9141   lgdt    gdtdesc
+9142   movl    %cr0, %eax
+9143   orl     $CR0_PE, %eax
+9144   movl    %eax, %cr0
+9145 
+9146 
+9147 
+9148 
+9149 
+9150   
+9151   
+9152   
+9153   ljmp    $(SEG_KCODE<<3), $start32
+9154 
+9155 .code32  
+9156 start32:
+9157   
+9158   movw    $(SEG_KDATA<<3), %ax    
+9159   movw    %ax, %ds                
+9160   movw    %ax, %es                
+9161   movw    %ax, %ss                
+9162   movw    $0, %ax                 
+9163   movw    %ax, %fs                
+9164   movw    %ax, %gs                
+9165 
+9166   
+9167   movl    $start, %esp
+9168   call    bootmain
+9169 
+9170   
+9171   
+9172   movw    $0x8a00, %ax            
+9173   movw    %ax, %dx
+9174   outw    %ax, %dx
+9175   movw    $0x8ae0, %ax            
+9176   outw    %ax, %dx
+9177 spin:
+9178   jmp     spin
+9179 
+9180 
+9181 .p2align 2                                
+9182 gdt:
+9183   SEG_NULLASM                             
+9184   SEG_ASM(STA_X|STA_R, 0x0, 0xffffffff)   
+9185   SEG_ASM(STA_W, 0x0, 0xffffffff)         
+9186 
+9187 gdtdesc:
+9188   .word   (gdtdesc - gdt - 1)             
+9189   .long   gdt                             
+9190 
+9191 
+9192 
+9193 
+9194 
+9195 
+9196 
+9197 
+9198 
+9199 
+9200 
+9201 
+9202 
+9203 
+9204 
+9205 
+9206 
+9207 #include "types.h"
+9208 #include "elf.h"
+9209 #include "x86.h"
+9210 #include "memlayout.h"
+9211 
+9212 #define SECTSIZE  512
+9213 
+9214 void readseg(uchar*, uint, uint);
+9215 
+9216 void
+9217 bootmain(void)
+9218 {
+9219   struct elfhdr *elf;
+9220   struct proghdr *ph, *eph;
+9221   void (*entry)(void);
+9222   uchar* pa;
+9223 
+9224   elf = (struct elfhdr*)0x10000;  
+9225 
+9226   
+9227   readseg((uchar*)elf, 4096, 0);
+9228 
+9229   
+9230   if(elf->magic != ELF_MAGIC)
+9231     return;  
+9232 
+9233   
+9234   ph = (struct proghdr*)((uchar*)elf + elf->phoff);
+9235   eph = ph + elf->phnum;
+9236   for(; ph < eph; ph++){
+9237     pa = (uchar*)ph->paddr;
+9238     readseg(pa, ph->filesz, ph->off);
+9239     if(ph->memsz > ph->filesz)
+9240       stosb(pa + ph->filesz, 0, ph->memsz - ph->filesz);
+9241   }
+9242 
+9243   
+9244   
+9245   entry = (void(*)(void))(elf->entry);
+9246   entry();
+9247 }
+9248 
+9249 
+9250 void
+9251 waitdisk(void)
+9252 {
+9253   
+9254   while((inb(0x1F7) & 0xC0) != 0x40)
+9255     ;
+9256 }
+9257 
+9258 
+9259 void
+9260 readsect(void *dst, uint offset)
+9261 {
+9262   
+9263   waitdisk();
+9264   outb(0x1F2, 1);   
+9265   outb(0x1F3, offset);
+9266   outb(0x1F4, offset >> 8);
+9267   outb(0x1F5, offset >> 16);
+9268   outb(0x1F6, (offset >> 24) | 0xE0);
+9269   outb(0x1F7, 0x20);  
+9270 
+9271   
+9272   waitdisk();
+9273   insl(0x1F0, dst, SECTSIZE/4);
+9274 }
+9275 
+9276 
+9277 
+9278 void
+9279 readseg(uchar* pa, uint count, uint offset)
+9280 {
+9281   uchar* epa;
+9282 
+9283   epa = pa + count;
+9284 
+9285   
+9286   pa -= offset % SECTSIZE;
+9287 
+9288   
+9289   offset = (offset / SECTSIZE) + 1;
+9290 
+9291   
+9292   
+9293   
+9294   for(; pa < epa; pa += SECTSIZE, offset++)
+9295     readsect(pa, offset);
+9296 }
+9297 
+9298 
+9299 
+9300 /* Simple linker script for the JOS kernel.
+9301    See the GNU ld 'info' manual ("info ld") to learn the syntax. */
+9302 
+9303 OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
+9304 OUTPUT_ARCH(i386)
+9305 ENTRY(_start)
+9306 
+9307 SECTIONS
+9308 {
+9309 	/* Link the kernel at this address: "." means the current address */
+9310         /* Must be equal to KERNLINK */
+9311 	. = 0x80100000;
+9312 
+9313 	.text : AT(0x100000) {
+9314 		*(.text .stub .text.* .gnu.linkonce.t.*)
+9315 	}
+9316 
+9317 	PROVIDE(etext = .);	/* Define the 'etext' symbol to this value */
+9318 
+9319 	.rodata : {
+9320 		*(.rodata .rodata.* .gnu.linkonce.r.*)
+9321 	}
+9322 
+9323 	/* Include debugging information in kernel memory */
+9324 	.stab : {
+9325 		PROVIDE(__STAB_BEGIN__ = .);
+9326 		*(.stab);
+9327 		PROVIDE(__STAB_END__ = .);
+9328 	}
+9329 
+9330 	.stabstr : {
+9331 		PROVIDE(__STABSTR_BEGIN__ = .);
+9332 		*(.stabstr);
+9333 		PROVIDE(__STABSTR_END__ = .);
+9334 	}
+9335 
+9336 	/* Adjust the address for the data segment to the next page */
+9337 	. = ALIGN(0x1000);
+9338 
+9339 	/* Conventionally, Unix linkers provide pseudo-symbols
+9340 	 * etext, edata, and end, at the end of the text, data, and bss.
+9341 	 * For the kernel mapping, we need the address at the beginning
+9342 	 * of the data section, but that's not one of the conventional
+9343 	 * symbols, because the convention started before there was a
+9344 	 * read-only rodata section between text and data. */
+9345 	PROVIDE(data = .);
+9346 
+9347 
+9348 
+9349 
+9350 	/* The data segment */
+9351 	.data : {
+9352 		*(.data)
+9353 	}
+9354 
+9355 	PROVIDE(edata = .);
+9356 
+9357 	.bss : {
+9358 		*(.bss)
+9359 	}
+9360 
+9361 	PROVIDE(end = .);
+9362 
+9363 	/DISCARD/ : {
+9364 		*(.eh_frame .note.GNU-stack)
+9365 	}
+9366 }
+9367 
+9368 
+9369 
+9370 
+9371 
+9372 
+9373 
+9374 
+9375 
+9376 
+9377 
+9378 
+9379 
+9380 
+9381 
+9382 
+9383 
+9384 
+9385 
+9386 
+9387 
+9388 
+9389 
+9390 
+9391 
+9392 
+9393 
+9394 
+9395 
+9396 
+9397 
+9398 
+9399 
