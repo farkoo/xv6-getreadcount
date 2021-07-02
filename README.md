@@ -8,7 +8,7 @@ In the first step to change this kernel, we install qemu emulator and apply thes
 sudo apt-get install qemu-kvm
 ```
 
-### Install the xv kernel and launch it on qemu
+### Install the xv6 kernel and launch it on qemu
 ```
 sudo apt-get install git
 git clone https://github.com/mit-pdos/xv6-public.git
@@ -31,4 +31,21 @@ main(void){
 	exit();
 }
 ```
+
+## Support
+
+**Contact me @:**
+
+e-mail:
+
+* farzanehkoohestani2000@gmail.com
+
+Telegram id:
+
+* [@farzaneh_koohestani](https://t.me/farzaneh_koohestani)
+
+## License
+[MIT](https://github.com/farkoo/xv6-getreadcount/blob/master/LICENSE)
+&#0169; 
+[Farzaneh Koohestani](https://github.com/farkoo)
 
