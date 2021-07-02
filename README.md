@@ -16,7 +16,7 @@ cd xv6-public
 make qemu-nox
 ```
 ### int getreadcount(void)
-This call system returns the number of system calls from the time the system was booted to the present time.
+This system call returns the number of system calls from the time the system was booted to the present time.
 
 ### Test
 Run this code!
